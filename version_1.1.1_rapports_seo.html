@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Generateur de synthese SEO | Modelo Lead Factory</title>
+    <style>
+      :root {
+        --bg: #f6f1e8;
+        --surface: rgba(255, 252, 247, 0.92);
+        --surface-strong: #fffaf2;
+        --ink: #1d2430;
+        --muted: #5f6672;
+        --line: rgba(29, 36, 48, 0.12);
+        --brand: #9f4f22;
+        --brand-soft: #f2d8c7;
+        --accent: #1d6a72;
+        --accent-soft: #d9eff1;
+        --success: #1f6b45;
+        --warning: #b75d16;
+        --shadow: 0 18px 50px rgba(64, 37, 12, 0.12);
+        --radius-xl: 28px;
+        --radius-lg: 20px;
+        --radius-md: 14px;
+        --radius-sm: 10px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(159, 79, 34, 0.18), transparent 32%),
+          radial-gradient(circle at top right, rgba(29, 106, 114, 0.18), transparent 24%),
+          linear-gradient(180deg, #f7efe3 0%, #f4f4ef 100%);
+      }
+
+      .page-shell {
+        width: min(1280px, calc(100% - 32px));
+        margin: 24px auto 48px;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 20px;
+        align-items: stretch;
+        margin-bottom: 24px;
+      }
+
+      .hero-card,
+      .stat-card,
+      .panel,
+      .output-panel {
+        background: var(--surface);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        box-shadow: var(--shadow);
+      }
+
+      .hero-card {
+        border-radius: var(--radius-xl);
+        padding: 32px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero-card::after {
+        content: "";
+        position: absolute;
+        inset: auto -60px -80px auto;
+        width: 220px;
+        height: 220px;
+        background: radial-gradient(circle, rgba(159, 79, 34, 0.14), transparent 68%);
+        pointer-events: none;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.68);
+        color: var(--accent);
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        letter-spacing: -0.02em;
+      }
+
+      h1 {
+        font-size: clamp(2.4rem, 4vw, 4rem);
+        line-height: 0.98;
+        margin-top: 18px;
+        max-width: 12ch;
+      }
+
+      .hero p {
+        margin: 18px 0 0;
+        font-size: 1rem;
+        line-height: 1.65;
+        color: var(--muted);
+        max-width: 58ch;
+      }
+
+      .stats-column {
+        display: grid;
+        gap: 16px;
+      }
+
+      .stat-card {
+        border-radius: var(--radius-lg);
+        padding: 24px;
+      }
+
+      .stat-card strong {
+        display: block;
+        font-size: 2rem;
+        margin-bottom: 6px;
+        color: var(--brand);
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+        gap: 24px;
+      }
+
+      .panel,
+      .output-panel {
+        border-radius: var(--radius-xl);
+        padding: 24px;
+      }
+
+      .panel-header,
+      .output-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+
+      .panel-header p,
+      .output-header p,
+      .helper,
+      .checkbox-grid label,
+      .file-note {
+        color: var(--muted);
+      }
+
+      form {
+        display: grid;
+        gap: 24px;
+      }
+
+      .section-block {
+        padding: 20px;
+        border-radius: var(--radius-lg);
+        background: var(--surface-strong);
+        border: 1px solid var(--line);
+      }
+
+      .section-block h3 {
+        font-size: 1.35rem;
+        margin-bottom: 8px;
+      }
+
+      .section-block > p {
+        margin: 0 0 16px;
+        line-height: 1.55;
+      }
+
+      .grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      .grid.two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid.three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      label,
+      legend {
+        font-size: 0.95rem;
+        font-weight: 700;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        border: 1px solid rgba(29, 36, 48, 0.14);
+        border-radius: var(--radius-sm);
+        padding: 13px 14px;
+        font: inherit;
+        color: var(--ink);
+        background: #fff;
+        transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+      }
+
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: none;
+        border-color: rgba(29, 106, 114, 0.45);
+        box-shadow: 0 0 0 4px rgba(29, 106, 114, 0.12);
+      }
+
+      textarea {
+        min-height: 110px;
+        resize: vertical;
+      }
+
+      fieldset {
+        margin: 0;
+        padding: 0;
+        border: 0;
+      }
+
+      .checkbox-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .checkbox-grid label {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 14px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        font-weight: 500;
+      }
+
+      .checkbox-grid input {
+        width: auto;
+        margin-top: 2px;
+      }
+
+      .dropzone {
+        display: grid;
+        gap: 10px;
+        border: 1.5px dashed rgba(29, 106, 114, 0.32);
+        border-radius: var(--radius-md);
+        padding: 18px;
+        background: linear-gradient(180deg, rgba(217, 239, 241, 0.35), rgba(255, 255, 255, 0.8));
+      }
+
+      .dropzone input {
+        background: transparent;
+        padding: 0;
+        border: 0;
+      }
+
+      .tag-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--brand-soft);
+        color: var(--brand);
+        font-size: 0.88rem;
+        font-weight: 700;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 999px;
+        padding: 14px 20px;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      .primary-btn {
+        color: #fff;
+        background: linear-gradient(135deg, var(--brand), #bf6f3f);
+        box-shadow: 0 14px 28px rgba(159, 79, 34, 0.24);
+      }
+
+      .secondary-btn {
+        background: #fff;
+        color: var(--ink);
+        border: 1px solid var(--line);
+      }
+
+      .ghost-btn {
+        background: rgba(29, 106, 114, 0.1);
+        color: var(--accent);
+      }
+
+      .status-banner {
+        margin-top: 16px;
+        padding: 14px 16px;
+        border-radius: var(--radius-md);
+        font-size: 0.95rem;
+        line-height: 1.5;
+        display: none;
+      }
+
+      .status-banner.show {
+        display: block;
+      }
+
+      .status-banner.error {
+        color: #7c3600;
+        background: rgba(255, 232, 214, 0.9);
+        border: 1px solid rgba(183, 93, 22, 0.22);
+      }
+
+      .status-banner.success {
+        color: #0f5f39;
+        background: rgba(222, 244, 232, 0.9);
+        border: 1px solid rgba(31, 107, 69, 0.18);
+      }
+
+      .output-panel {
+        position: sticky;
+        top: 24px;
+        height: fit-content;
+      }
+
+      .summary-box {
+        min-height: 480px;
+        padding: 22px;
+        border-radius: var(--radius-lg);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 249, 242, 0.96));
+        border: 1px solid var(--line);
+        white-space: pre-wrap;
+        line-height: 1.7;
+      }
+
+      .summary-placeholder {
+        color: var(--muted);
+      }
+
+      .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .pill {
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 0.85rem;
+        font-weight: 700;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      @media (max-width: 1100px) {
+        .hero,
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        .output-panel {
+          position: static;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .page-shell {
+          width: min(100% - 18px, 100%);
+          margin-top: 12px;
+        }
+
+        .hero-card,
+        .panel,
+        .output-panel,
+        .stat-card {
+          padding: 18px;
+          border-radius: 22px;
+        }
+
+        .grid.two,
+        .grid.three,
+        .checkbox-grid {
+          grid-template-columns: 1fr;
+        }
+
+        h1 {
+          max-width: none;
+        }
+      }
+
+      @media print {
+        body {
+          background: #fff;
+        }
+
+        .hero,
+        .panel {
+          display: none;
+        }
+
+        .page-shell,
+        .output-panel {
+          width: 100%;
+          margin: 0;
+          box-shadow: none;
+        }
+
+        .output-panel,
+        .summary-box {
+          border: 0;
+          padding: 0;
+          background: #fff;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="hero">
+        <article class="hero-card">
+          <span class="eyebrow">Modelo Lead Factory</span>
+          <h1>Generateur de synthese SEO, SMO et SEA</h1>
+          <p>
+            Cette page centralise la preparation d'un rapport trimestriel ou semestriel Looker
+            Studio. L'utilisateur renseigne le contexte client, ajoute les fichiers utiles et
+            obtient une synthese multi-offres structurée, pedagogique et prete pour export PDF.
+          </p>
+        </article>
+        <div class="stats-column">
+          <article class="stat-card">
+            <strong>1 page</strong>
+            <span>Formulaire conditionnel pour SEO, SMO et SEA, avec controles de presence des pieces jointes.</span>
+          </article>
+          <article class="stat-card">
+            <strong>3 leviers</strong>
+            <span>Le moteur adapte les champs et la synthese finale selon les packs souscrits.</span>
+          </article>
+          <article class="stat-card">
+            <strong>Exportable</strong>
+            <span>La sortie se previsualise a droite puis peut etre imprimee ou enregistree en PDF.</span>
+          </article>
+        </div>
+      </section>
+
+      <div class="layout">
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Preparation du rapport</h2>
+              <p>
+                Remplissez les informations disponibles du rapport Looker Studio. Les champs
+                s'affichent automatiquement selon les offres actives.
+              </p>
+            </div>
+            <div class="pill-row">
+              <span class="pill">Rapport PDF obligatoire</span>
+              <span class="pill">GSC requis si SEO</span>
+            </div>
+          </div>
+
+          <form id="report-form">
+            <section class="section-block">
+              <h3>1. Contexte client</h3>
+              <div class="grid two">
+                <div class="field">
+                  <label for="client-name">Nom du client</label>
+                  <input id="client-name" name="clientName" type="text" placeholder="Ex : Agence Durand" required />
+                </div>
+                <div class="field">
+                  <label for="analysis-period">Periode analysee</label>
+                  <input id="analysis-period" name="analysisPeriod" type="text" placeholder="Ex : T1 2026 ou S2 2025" required />
+                </div>
+              </div>
+              <div class="grid three">
+                <div class="field">
+                  <label for="seo-pack">Pack SEO</label>
+                  <select id="seo-pack" name="seoPack">
+                    <option value="">Non actif</option>
+                    <option value="Essentiel">Essentiel</option>
+                    <option value="Signature">Signature</option>
+                    <option value="Excellence">Excellence</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="smo-pack">Pack SMO</label>
+                  <select id="smo-pack" name="smoPack">
+                    <option value="">Non actif</option>
+                    <option value="Signature">Signature</option>
+                    <option value="Excellence">Excellence</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="sea-pack">Pack SEA</label>
+                  <select id="sea-pack" name="seaPack">
+                    <option value="">Non actif</option>
+                    <option value="Signature">Signature</option>
+                    <option value="Excellence">Excellence</option>
+                  </select>
+                </div>
+              </div>
+            </section>
+
+            <section class="section-block">
+              <h3>2. Pieces jointes</h3>
+              <p>Le rapport principal est obligatoire. Le fichier Google Search Console est requis si le SEO est active.</p>
+              <div class="grid two">
+                <div class="dropzone">
+                  <label for="main-report">Rapport Looker Studio / PDF principal</label>
+                  <input id="main-report" name="mainReport" type="file" accept=".pdf,.ppt,.pptx,.csv,.xlsx,.xls,.txt" multiple required />
+                  <span class="file-note">Ajoutez un ou plusieurs documents de reference.</span>
+                  <div class="tag-list" id="main-report-tags"></div>
+                </div>
+                <div class="dropzone">
+                  <label for="gsc-report">Fichier GSC "Requetes les plus frequentes"</label>
+                  <input id="gsc-report" name="gscReport" type="file" accept=".xlsx,.xls,.csv" />
+                  <span class="file-note">Necessaire uniquement si un pack SEO est selectionne.</span>
+                  <div class="tag-list" id="gsc-report-tags"></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="section-block">
+              <h3>3. Indicateurs globaux</h3>
+              <div class="grid three">
+                <div class="field">
+                  <label for="global-traffic">Trafic total observe</label>
+                  <input id="global-traffic" name="globalTraffic" type="text" placeholder="Ex : 14 520 sessions (+12 %)" />
+                </div>
+                <div class="field">
+                  <label for="global-engagement">Engagement</label>
+                  <input id="global-engagement" name="globalEngagement" type="text" placeholder="Ex : 1 min 42 / 61 % de taux d'engagement" />
+                </div>
+                <div class="field">
+                  <label for="global-conversions">Conversions</label>
+                  <input id="global-conversions" name="globalConversions" type="text" placeholder="Ex : 48 leads (+9 %)" />
+                </div>
+              </div>
+              <div class="grid two">
+                <div class="field">
+                  <label for="device-mix">Comportement des internautes</label>
+                  <textarea id="device-mix" name="deviceMix" placeholder="Ex : 72 % mobile, 28 % desktop. Les internautes consultent surtout les pages biens et contact."></textarea>
+                </div>
+                <div class="field">
+                  <label for="traffic-acquisition">Acquisition de trafic</label>
+                  <textarea id="traffic-acquisition" name="trafficAcquisition" placeholder="Ex : organique majoritaire, direct stable, SEA en progression sur les zones prioritaires."></textarea>
+                </div>
+              </div>
+              <div class="field">
+                <label for="conversion-details">Details conversions</label>
+                <textarea id="conversion-details" name="conversionDetails" placeholder="Ex : les formulaires de contact restent le point d'entree principal, suivis des appels mobiles et des clics sur les annonces sponsorisees."></textarea>
+              </div>
+            </section>
+
+            <section id="seo-section" class="section-block hidden">
+              <h3>4. Bloc SEO</h3>
+              <div class="grid two">
+                <div class="field">
+                  <label for="seo-metrics">Indicateurs SEO</label>
+                  <textarea id="seo-metrics" name="seoMetrics" placeholder="Ex : 6 240 sessions organiques, 81 500 impressions, CTR 3,9 %, position moyenne 11,2."></textarea>
+                </div>
+                <div class="field">
+                  <label for="seo-actions">Optimisations realisees</label>
+                  <textarea id="seo-actions" name="seoActions" placeholder="Essentiel : 6 interventions. Signature / Excellence : 3 principales. Une ligne par action."></textarea>
+                </div>
+              </div>
+              <div class="grid two">
+                <div class="field">
+                  <label for="seo-upcoming">Optimisations a venir</label>
+                  <textarea id="seo-upcoming" name="seoUpcoming" placeholder="Ex : consolidation du maillage interne, enrichissement des pages locales, suivi technique trimestriel."></textarea>
+                </div>
+                <div class="field">
+                  <label for="seo-good-practices">Bonnes pratiques cote client</label>
+                  <textarea id="seo-good-practices" name="seoGoodPractices" placeholder="Ex : publier des actualites, ajouter des biens, recueillir des avis clients, partager des photos recentes."></textarea>
+                </div>
+              </div>
+              <div class="field">
+                <label for="keyword-table">Mots-cles suivis</label>
+                <textarea id="keyword-table" name="keywordTable" placeholder="Une ligne par mot-cle, au format : mot-cle | clics recents | clics precedents | position recente | position precedente | evolution"></textarea>
+              </div>
+              <div class="field">
+                <label for="seo-comment">Commentaire personnel SEO (facultatif)</label>
+                <textarea id="seo-comment" name="seoComment" placeholder="Ajoutez un commentaire du chef de projet si necessaire."></textarea>
+              </div>
+            </section>
+
+            <section id="smo-section" class="section-block hidden">
+              <h3>5. Bloc SMO</h3>
+              <div class="grid two">
+                <div class="field">
+                  <label for="smo-networks">Reseaux geres</label>
+                  <input id="smo-networks" name="smoNetworks" type="text" placeholder="Ex : Facebook, LinkedIn, Google Business Profile" />
+                </div>
+                <div class="field">
+                  <label for="smo-metrics">Performances sociales</label>
+                  <textarea id="smo-metrics" name="smoMetrics" placeholder="Ex : hausse de l'engagement, progression des impressions locales, bonne regularite des publications."></textarea>
+                </div>
+              </div>
+              <div class="field">
+                <label for="smo-client-actions">Actions possibles cote client</label>
+                <textarea id="smo-client-actions" name="smoClientActions" placeholder="Ex : partager des photos d'equipe, temoignages clients, actualites locales et nouveaux biens."></textarea>
+              </div>
+              <div class="field">
+                <label for="smo-comment">Commentaire personnel SMO (facultatif)</label>
+                <textarea id="smo-comment" name="smoComment" placeholder="Ajoutez un commentaire du chef de projet si necessaire."></textarea>
+              </div>
+            </section>
+
+            <section id="sea-section" class="section-block hidden">
+              <h3>6. Bloc SEA</h3>
+              <div class="grid two">
+                <div class="field">
+                  <label for="sea-metrics">Indicateurs SEA</label>
+                  <textarea id="sea-metrics" name="seaMetrics" placeholder="Ex : 58 000 impressions, 1 940 clics, CPC moyen 0,84 EUR, 31 conversions, taux de conversion 1,6 %."></textarea>
+                </div>
+                <div class="field">
+                  <label for="sea-upcoming">Optimisations en cours et a venir</label>
+                  <textarea id="sea-upcoming" name="seaUpcoming" placeholder="Ex : ajustement des audiences, travail sur les visuels, affinage des zones ciblees et des annonces."></textarea>
+                </div>
+              </div>
+              <fieldset class="field">
+                <legend>Actions SEA effectuees pendant la periode</legend>
+                <div class="checkbox-grid" id="sea-actions-grid">
+                  <label><input type="checkbox" value="Respect du budget : verification du budget signe en debut de prestation." />Respect du budget</label>
+                  <label><input type="checkbox" value="Controle global : analyse des clics, impressions, conversions et de leurs evolutions." />Controle global</label>
+                  <label><input type="checkbox" value="Suivi des recommandations Google : prise en compte des recommandations pour optimiser la campagne." />Suivi des recommandations Google</label>
+                  <label><input type="checkbox" value="Verification de la diffusion des annonces : controle de l'activite des campagnes et des refus eventuels." />Verification de la diffusion</label>
+                  <label><input type="checkbox" value="Mise a jour des mots-cles : ajout, modification ou mise en veille selon les performances." />Mise a jour des mots-cles</label>
+                  <label><input type="checkbox" value="Analyse des termes de recherche : exclusion des recherches non pertinentes." />Analyse des termes de recherche</label>
+                  <label><input type="checkbox" value="Analyse du CPC : suivi du cout par clic et ajustements associes." />Analyse du CPC</label>
+                  <label><input type="checkbox" value="Optimisation des audiences : ajustement des cibles selon les zones, horaires, appareils et profils." />Optimisation des audiences</label>
+                </div>
+              </fieldset>
+              <div class="field">
+                <label for="sea-comment">Commentaire personnel SEA (facultatif)</label>
+                <textarea id="sea-comment" name="seaComment" placeholder="Ajoutez un commentaire du chef de projet si necessaire."></textarea>
+              </div>
+            </section>
+
+            <div class="actions">
+              <button class="primary-btn" type="submit">Generer la synthese</button>
+              <button class="secondary-btn" type="button" id="prefill-demo">Remplir un exemple</button>
+              <button class="ghost-btn" type="button" id="print-summary">Exporter en PDF</button>
+            </div>
+            <div id="status-banner" class="status-banner"></div>
+          </form>
+        </section>
+
+        <aside class="output-panel">
+          <div class="output-header">
+            <div>
+              <h2>Synthese generee</h2>
+              <p>La previsualisation s'actualise a chaque validation du formulaire.</p>
+            </div>
+          </div>
+          <div id="summary-output" class="summary-box">
+            <span class="summary-placeholder">
+              La synthese apparaitra ici apres validation du formulaire. Vous pourrez ensuite
+              l'imprimer en PDF via le bouton "Exporter en PDF".
+            </span>
+          </div>
+        </aside>
+      </div>
+    </main>
+
+    <script>
+      const form = document.getElementById("report-form");
+      const seoPack = document.getElementById("seo-pack");
+      const smoPack = document.getElementById("smo-pack");
+      const seaPack = document.getElementById("sea-pack");
+      const seoSection = document.getElementById("seo-section");
+      const smoSection = document.getElementById("smo-section");
+      const seaSection = document.getElementById("sea-section");
+      const statusBanner = document.getElementById("status-banner");
+      const summaryOutput = document.getElementById("summary-output");
+      const mainReport = document.getElementById("main-report");
+      const gscReport = document.getElementById("gsc-report");
+      const mainReportTags = document.getElementById("main-report-tags");
+      const gscReportTags = document.getElementById("gsc-report-tags");
+      const prefillButton = document.getElementById("prefill-demo");
+      const printButton = document.getElementById("print-summary");
+
+      const seaActionInputs = Array.from(
+        document.querySelectorAll('#sea-actions-grid input[type="checkbox"]')
+      );
+
+      function toggleConditionalSections() {
+        seoSection.classList.toggle("hidden", !seoPack.value);
+        smoSection.classList.toggle("hidden", !smoPack.value);
+        seaSection.classList.toggle("hidden", !seaPack.value);
+      }
+
+      function updateFileTags(input, container) {
+        const tags = Array.from(input.files || []);
+        container.innerHTML = "";
+        tags.forEach((file) => {
+          const tag = document.createElement("span");
+          tag.className = "tag";
+          tag.textContent = file.name;
+          container.appendChild(tag);
+        });
+      }
+
+      function setStatus(message, kind) {
+        statusBanner.textContent = message;
+        statusBanner.className = `status-banner show ${kind}`;
+      }
+
+      function clearStatus() {
+        statusBanner.textContent = "";
+        statusBanner.className = "status-banner";
+      }
+
+      function autoSelectSeaActions() {
+        const chosen = seaActionInputs.filter((input) => input.checked);
+        if (chosen.length > 0) {
+          return chosen.map((input) => input.value);
+        }
+
+        const defaults = [0, 1, 3, 7];
+        return defaults.map((index) => seaActionInputs[index].value);
+      }
+
+      function formatOfferLine(seo, smo, sea) {
+        const offers = [];
+        if (seo) offers.push(`SEO ${seo}`);
+        if (smo) offers.push(`SMO ${smo}`);
+        if (sea) offers.push(`SEA ${sea}`);
+        return offers.length ? offers.join(" | ") : "Aucune offre active";
+      }
+
+      function listFromTextarea(value, fallbackItems) {
+        const cleanItems = value
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean);
+
+        return cleanItems.length ? cleanItems : fallbackItems;
+      }
+
+      function buildKeywordTable(rawValue) {
+        const rows = rawValue
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .map((line) => line.split("|").map((cell) => cell.trim()));
+
+        if (!rows.length) {
+          return "Aucun tableau de mots-cles n'a ete renseigne.";
+        }
+
+        const header = "Mot-cle | Clics recents | Clics precedents | Position recente | Position precedente | Evolution";
+        const divider = "------- | ------------- | ----------------- | ---------------- | ------------------- | ---------";
+        const content = rows
+          .map((cells) => {
+            const padded = [...cells, "-", "-", "-", "-", "-", "-"].slice(0, 6);
+            return padded.join(" | ");
+          })
+          .join("\n");
+
+        return `${header}\n${divider}\n${content}`;
+      }
+
+      function buildSummary(data) {
+        const offersLine = formatOfferLine(data.seoPack, data.smoPack, data.seaPack);
+        const reportNames = Array.from(mainReport.files || [])
+          .map((file) => file.name)
+          .join(", ");
+        const gscName = gscReport.files[0]?.name || "Non fourni";
+
+        const intro = [
+          "INTRODUCTION",
+          `${data.clientName} - ${data.analysisPeriod}`,
+          `Offres actives : ${offersLine}.`,
+          `Rapports analyses : ${reportNames}.`,
+          data.globalTraffic || "Le trafic global doit etre complete avec les donnees du rapport.",
+          data.globalConversions
+            ? `La periode met en avant ${data.globalConversions.toLowerCase()}.`
+            : "Les conversions doivent etre precisees pour completer l'analyse globale.",
+          ""
+        ].join("\n");
+
+        const globalSummary = [
+          "SYNTHESE GLOBALE",
+          "",
+          "Resultats observes",
+          `${data.globalTraffic || "Les performances de trafic restent a renseigner"} et ${data.globalEngagement || "les indicateurs d'engagement sont a completer"}. L'objectif est de faire ressortir la dynamique generale de la periode, qu'elle soit en hausse, stable ou en retrait.`,
+          "",
+          "Comportement des internautes",
+          data.deviceMix ||
+            "Precisez le temps passe, la repartition mobile / desktop et les villes principales pour decrire le profil des internautes.",
+          "",
+          "Acquisition de trafic",
+          data.trafficAcquisition ||
+            "Detaillez ici la repartition entre organique, direct, social et payant pour que la synthese puisse valoriser les canaux majeurs.",
+          "",
+          "Conversions",
+          data.conversionDetails ||
+            "Ajoutez ici les formulaires, appels, clics ou demandes de contact issus du rapport.",
+          ""
+        ].join("\n");
+
+        const sections = [intro, globalSummary];
+
+        if (data.seoPack) {
+          const defaultSeoFuture = [
+            "Poursuite de l'optimisation technique du site et du maillage interne.",
+            "Enrichissement des contenus strategiques et des pages locales.",
+            "Suivi des performances SEO et ajustements selon les priorites commerciales."
+          ];
+          const defaultSeoTips = [
+            "Publier regulierement des actualites et de nouveaux biens.",
+            "Partager des photos recentes et des informations locales.",
+            "Encourager les avis clients pour renforcer la confiance locale."
+          ];
+
+          const seoActionsLabel =
+            data.seoPack === "Essentiel"
+              ? "Les six dernieres interventions SEO realisees sont les suivantes :"
+              : "Les trois optimisations SEO principales de la periode sont les suivantes :";
+
+          const seoPart = [
+            "REFERENCEMENT NATUREL (SEO)",
+            `${data.seoMetrics || "Les indicateurs SEO restent a renseigner : sessions, impressions, CTR et position moyenne."}`,
+            seoActionsLabel,
+            ...listFromTextarea(data.seoActions, [
+              "Optimisation on-page sur les pages prioritaires.",
+              "Ajustement technique et controle de l'indexation.",
+              "Consolidation du maillage interne."
+            ]).map((item) => `- ${item}`),
+            "",
+            "Optimisations a venir",
+            ...listFromTextarea(data.seoUpcoming, defaultSeoFuture).map((item) => `- ${item}`),
+            "",
+            "Bonnes pratiques cote client",
+            ...listFromTextarea(data.seoGoodPractices, defaultSeoTips).map((item) => `- ${item}`),
+            "",
+            "Positionnement des mots-cles suivis",
+            buildKeywordTable(data.keywordTable),
+            "",
+            "Ces expressions traduisent la bonne visibilite locale de l'agence sur ses zones de chalandise principales.",
+            data.seoComment ? `Commentaire du chef de projet : ${data.seoComment}` : "",
+            `Fichier GSC associe : ${gscName}.`,
+            ""
+          ]
+            .filter(Boolean)
+            .join("\n");
+
+          sections.push(seoPart);
+        }
+
+        if (data.smoPack) {
+          const defaultSmoTips = [
+            "Partager des photos recentes de l'equipe et des biens a valoriser.",
+            "Transmettre des actualites locales ou des evenements a relayer.",
+            "Faire remonter des temoignages clients et des temps forts d'agence."
+          ];
+
+          const smoPart = [
+            "SMO",
+            `Reseaux actifs : ${data.smoNetworks || "A preciser selon les reseaux geres"} .`,
+            data.smoMetrics ||
+              "Ajoutez ici la progression de l'audience, de l'engagement et des impressions pour les reseaux actifs.",
+            "",
+            "Actions cote client",
+            ...listFromTextarea(data.smoClientActions, defaultSmoTips).map((item) => `- ${item}`),
+            "",
+            "Ces partages reguliers permettent d'humaniser la communication et d'accroitre la proximite avec votre audience locale.",
+            data.smoComment ? `Commentaire du chef de projet : ${data.smoComment}` : "",
+            ""
+          ]
+            .filter(Boolean)
+            .join("\n");
+
+          sections.push(smoPart);
+        }
+
+        if (data.seaPack) {
+          const offerDetail =
+            data.seaPack === "Signature"
+              ? "Offre Signature : campagne Performance Max."
+              : "Offre Excellence : campagnes Performance Max et Search.";
+
+          const seaPart = [
+            "SEA",
+            offerDetail,
+            data.seaMetrics ||
+              "Ajoutez ici les impressions, clics, CPC, conversions et taux de conversion issus du rapport.",
+            "",
+            "Actions effectuees pendant la periode",
+            ...autoSelectSeaActions().map((item) => `- ${item}`),
+            "",
+            "Optimisations en cours et a venir",
+            ...listFromTextarea(data.seaUpcoming, [
+              "Ajustement des audiences et des zones geographiques prioritaires.",
+              "Renforcement des visuels et messages publicitaires.",
+              "Travail sur les annonces et les parametres de diffusion pour soutenir la rentabilite."
+            ]).map((item) => `- ${item}`),
+            "",
+            "Ces actions assurent le maintien de la performance et la conformite des campagnes Google Ads.",
+            data.seaComment ? `Commentaire du chef de projet : ${data.seaComment}` : "",
+            ""
+          ]
+            .filter(Boolean)
+            .join("\n");
+
+          sections.push(seaPart);
+        }
+
+        const finalPart = [
+          "SYNTHESE FINALE",
+          `Sur ${data.analysisPeriod}, ${data.clientName} beneficie d'une lecture consolidee de ses performances digitales. Les indicateurs de trafic, de visibilite et d'engagement permettent d'identifier les leviers les plus porteurs tout en priorisant les axes de progression du prochain cycle.`,
+          "Les points forts du trimestre doivent etre relies aux canaux qui soutiennent le mieux la visibilite locale, la notoriete et la generation de contacts qualifies.",
+          "Les priorites a venir consistent a maintenir la regularite des optimisations, enrichir les contenus ou campagnes les plus prometteurs et conserver une lecture pedagogique des performances pour le client final.",
+          "L'ensemble de ces leviers contribue a renforcer la visibilite, la notoriete locale et la generation de contacts qualifies. Les prochaines etapes permettront de consolider durablement ces resultats.",
+          "",
+          'Validation intermediaire : "Voici le rapport previsualise. Souhaitez-vous le generer dans le canevas pour export PDF ? (Oui / Non)"'
+        ].join("\n");
+
+        sections.push(finalPart);
+
+        return sections.join("\n\n");
+      }
+
+      function serializeForm() {
+        return {
+          clientName: document.getElementById("client-name").value.trim(),
+          analysisPeriod: document.getElementById("analysis-period").value.trim(),
+          seoPack: seoPack.value,
+          smoPack: smoPack.value,
+          seaPack: seaPack.value,
+          globalTraffic: document.getElementById("global-traffic").value.trim(),
+          globalEngagement: document.getElementById("global-engagement").value.trim(),
+          globalConversions: document.getElementById("global-conversions").value.trim(),
+          deviceMix: document.getElementById("device-mix").value.trim(),
+          trafficAcquisition: document.getElementById("traffic-acquisition").value.trim(),
+          conversionDetails: document.getElementById("conversion-details").value.trim(),
+          seoMetrics: document.getElementById("seo-metrics").value.trim(),
+          seoActions: document.getElementById("seo-actions").value.trim(),
+          seoUpcoming: document.getElementById("seo-upcoming").value.trim(),
+          seoGoodPractices: document.getElementById("seo-good-practices").value.trim(),
+          keywordTable: document.getElementById("keyword-table").value.trim(),
+          seoComment: document.getElementById("seo-comment").value.trim(),
+          smoNetworks: document.getElementById("smo-networks").value.trim(),
+          smoMetrics: document.getElementById("smo-metrics").value.trim(),
+          smoClientActions: document.getElementById("smo-client-actions").value.trim(),
+          smoComment: document.getElementById("smo-comment").value.trim(),
+          seaMetrics: document.getElementById("sea-metrics").value.trim(),
+          seaUpcoming: document.getElementById("sea-upcoming").value.trim(),
+          seaComment: document.getElementById("sea-comment").value.trim()
+        };
+      }
+
+      function validateForm(data) {
+        if (!data.clientName || !data.analysisPeriod) {
+          return "Merci de renseigner le nom du client et la periode analysee.";
+        }
+
+        if (!mainReport.files.length) {
+          return "Merci de joindre le rapport PDF principal avant de poursuivre.";
+        }
+
+        if (data.seoPack && !gscReport.files.length) {
+          return 'Merci de joindre le rapport PDF principal et, pour le SEO, le fichier Excel "Requetes les plus frequentes" avant de poursuivre.';
+        }
+
+        if (data.smoPack === "Signature" && !data.smoNetworks) {
+          return "Merci de preciser les 2 reseaux geres pour le pack SMO Signature.";
+        }
+
+        if (data.smoPack === "Excellence" && !data.smoNetworks) {
+          return "Merci de preciser les 3 reseaux geres pour le pack SMO Excellence.";
+        }
+
+        return "";
+      }
+
+      seoPack.addEventListener("change", toggleConditionalSections);
+      smoPack.addEventListener("change", toggleConditionalSections);
+      seaPack.addEventListener("change", toggleConditionalSections);
+      mainReport.addEventListener("change", () => updateFileTags(mainReport, mainReportTags));
+      gscReport.addEventListener("change", () => updateFileTags(gscReport, gscReportTags));
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        clearStatus();
+
+        const data = serializeForm();
+        const validationMessage = validateForm(data);
+
+        if (validationMessage) {
+          setStatus(validationMessage, "error");
+          return;
+        }
+
+        summaryOutput.textContent = buildSummary(data);
+        setStatus("La synthese a ete generee. Vous pouvez maintenant la relire puis l'exporter en PDF.", "success");
+      });
+
+      prefillButton.addEventListener("click", () => {
+        document.getElementById("client-name").value = "Agence Horizon Immobilier";
+        document.getElementById("analysis-period").value = "T1 2026";
+        seoPack.value = "Signature";
+        smoPack.value = "Excellence";
+        seaPack.value = "Signature";
+        document.getElementById("global-traffic").value = "14 520 sessions (+12 % par rapport au trimestre precedent)";
+        document.getElementById("global-engagement").value = "1 min 47 de duree moyenne et 63 % de taux d'engagement";
+        document.getElementById("global-conversions").value = "52 leads qualifies (+11 %)";
+        document.getElementById("device-mix").value = "Le mobile represente 74 % du trafic. Les internautes consultent principalement les pages biens, estimation et contact depuis Bordeaux, Merignac et Pessac.";
+        document.getElementById("traffic-acquisition").value = "Le canal organique reste la premiere source d'entree, le direct demeure stable, le social soutient la notoriete locale et le SEA accompagne les zones prioritaires.";
+        document.getElementById("conversion-details").value = "Les formulaires de contact progressent, les appels mobiles restent reguliers et les campagnes sponsorisees soutiennent une partie des demandes d'estimation.";
+        document.getElementById("seo-metrics").value = "6 240 sessions organiques, 81 500 impressions, CTR moyen de 3,9 % et position moyenne de 11,2.";
+        document.getElementById("seo-actions").value = "Optimisation des balises sur les pages transaction\nMise a jour du maillage interne des fiches quartiers\nConsolidation de contenus locaux sur les secteurs prioritaires";
+        document.getElementById("seo-upcoming").value = "Enrichissement des pages estimation et vente\nPoursuite de l'optimisation du maillage interne\nSuivi des expressions locales a potentiel";
+        document.getElementById("seo-good-practices").value = "Ajouter regulierement de nouveaux biens\nPartager les actualites de l'agence\nEncourager les avis clients Google";
+        document.getElementById("keyword-table").value = "agence horizon immobilier | 210 | 188 | 1,8 | 2,1 | +0,3\nagence immobiliere bordeaux | 126 | 102 | 5,4 | 6,1 | +0,7\nimmobilier bordeaux | 88 | 72 | 8,9 | 10,2 | +1,3\nestimation appartement bordeaux | 41 | 29 | 10,6 | 12,4 | +1,8\nagence immobiliere merignac | 37 | 22 | 9,8 | 13,1 | +3,3";
+        document.getElementById("smo-networks").value = "Facebook, LinkedIn, Google Business Profile";
+        document.getElementById("smo-metrics").value = "La frequence de publication est reguliere, les impressions progressent sur Facebook et GBP, et l'engagement augmente sur les contenus mettant en avant l'equipe et les exclusivites.";
+        document.getElementById("smo-client-actions").value = "Partager des photos d'equipe et de nouveaux mandats\nFaire remonter les evenements locaux\nTransmettre des temoignages clients recents";
+        document.getElementById("sea-metrics").value = "58 000 impressions, 1 940 clics, CPC moyen de 0,84 EUR, 31 conversions et taux de conversion de 1,6 %.";
+        document.getElementById("sea-upcoming").value = "Travail sur les audiences de prospection\nRenforcement des accroches publicitaires\nAjustement des zones les plus rentables";
+        seaActionInputs.forEach((input, index) => {
+          input.checked = [0, 1, 3, 7].includes(index);
+        });
+        toggleConditionalSections();
+        clearStatus();
+      });
+
+      printButton.addEventListener("click", () => {
+        if (summaryOutput.textContent.trim() === "" || summaryOutput.querySelector(".summary-placeholder")) {
+          setStatus("Generez d'abord une synthese avant de lancer l'export PDF.", "error");
+          return;
+        }
+
+        window.print();
+      });
+
+      toggleConditionalSections();
+    </script>
+  </body>
+</html>

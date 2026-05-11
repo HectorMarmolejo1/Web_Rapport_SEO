@@ -1,0 +1,16 @@
+{
+  "name": "modelo-office-report-generator",
+  "version": "1.0.0",
+  "description": "Generateur de synthese SEO et SEA pour rapports Looker Studio",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@google/genai": "^0.14.1",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1"
+  }
+}

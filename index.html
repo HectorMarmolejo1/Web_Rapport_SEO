@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Générateur de synthèses SEO | Modelo Lead Factory</title>
+    <style>
+      :root {
+        --bg: #2e3661;
+        --surface: rgba(255, 255, 255, 0.94);
+        --surface-strong: #ffffff;
+        --ink: #262d63;
+        --muted: #5e6488;
+        --line: rgba(38, 45, 99, 0.1);
+        --brand: #ff5e3a;
+        --brand-soft: rgba(255, 94, 58, 0.12);
+        --accent: #2e3661;
+        --accent-soft: rgba(38, 45, 99, 0.08);
+        --success: #1f6b45;
+        --warning: #b75d16;
+        --shadow: 0 18px 50px rgba(38, 45, 99, 0.08);
+        --radius-xl: 32px;
+        --radius-lg: 22px;
+        --radius-md: 16px;
+        --radius-sm: 12px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(255, 94, 58, 0.16), transparent 26%),
+          radial-gradient(circle at top right, rgba(255, 255, 255, 0.08), transparent 18%),
+          linear-gradient(160deg, #24305a 0%, #2e3661 45%, #394479 100%);
+      }
+
+      .page-shell {
+        width: min(1280px, calc(100% - 32px));
+        margin: 24px auto 48px;
+      }
+
+      .hero-card,
+      .panel,
+      .output-panel {
+        background: var(--surface);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: var(--shadow);
+      }
+
+      .hero-card {
+        border-radius: var(--radius-xl);
+        padding: 28px 32px 32px;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 24px;
+      }
+
+      .hero-card::after {
+        content: "";
+        position: absolute;
+        inset: -40px -10px auto auto;
+        width: 180px;
+        height: 180px;
+        background: radial-gradient(circle, rgba(255, 94, 58, 0.1), transparent 68%);
+        pointer-events: none;
+      }
+
+      .hero-top {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-bottom: 16px;
+      }
+
+      .brand-lockup {
+        width: 92px;
+        height: auto;
+        flex: 0 0 auto;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--brand-soft);
+        color: var(--brand);
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        letter-spacing: -0.02em;
+      }
+
+      h1 {
+        font-size: clamp(2.4rem, 4vw, 4rem);
+        line-height: 0.98;
+        max-width: 14ch;
+        font-weight: 800;
+      }
+
+      .hero p {
+        margin: 18px 0 0;
+        font-size: 1rem;
+        line-height: 1.65;
+        color: var(--muted);
+        max-width: 58ch;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+
+      .panel,
+      .output-panel {
+        border-radius: var(--radius-xl);
+        padding: 24px;
+      }
+
+      .panel-header,
+      .output-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+
+      .panel-header p,
+      .output-header p,
+      .helper,
+      .checkbox-grid label,
+      .file-note {
+        color: var(--muted);
+      }
+
+      .panel-header {
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      form {
+        display: grid;
+        gap: 24px;
+      }
+
+      .section-block {
+        padding: 20px;
+        border-radius: var(--radius-lg);
+        background: var(--surface-strong);
+        border: 1px solid var(--line);
+      }
+
+      .section-block h3 {
+        font-size: 1.35rem;
+        margin-bottom: 8px;
+      }
+
+      .section-block > p {
+        margin: 0 0 16px;
+        line-height: 1.55;
+      }
+
+      .grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      .grid.two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid.three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      label,
+      legend {
+        font-size: 0.95rem;
+        font-weight: 700;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        border: 1px solid rgba(29, 36, 48, 0.14);
+        border-radius: var(--radius-sm);
+        padding: 13px 14px;
+        font: inherit;
+        color: var(--ink);
+        background: #fff;
+        transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+      }
+
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: none;
+        border-color: rgba(29, 106, 114, 0.45);
+        box-shadow: 0 0 0 4px rgba(29, 106, 114, 0.12);
+      }
+
+      textarea {
+        min-height: 110px;
+        resize: vertical;
+      }
+
+      fieldset {
+        margin: 0;
+        padding: 0;
+        border: 0;
+      }
+
+      .checkbox-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .checkbox-grid label {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 14px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        font-weight: 500;
+      }
+
+      .checkbox-grid input {
+        width: auto;
+        margin-top: 2px;
+      }
+
+      .dropzone {
+        display: grid;
+        gap: 10px;
+        border: 1.5px dashed rgba(29, 106, 114, 0.32);
+        border-radius: var(--radius-md);
+        padding: 18px;
+        background: linear-gradient(180deg, rgba(217, 239, 241, 0.35), rgba(255, 255, 255, 0.8));
+      }
+
+      .dropzone input {
+        background: transparent;
+        padding: 0;
+        border: 0;
+      }
+
+      .tag-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--brand-soft);
+        color: var(--brand);
+        font-size: 0.88rem;
+        font-weight: 700;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 999px;
+        padding: 14px 20px;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      .primary-btn {
+        color: #fff;
+        background: linear-gradient(135deg, var(--brand), #bf6f3f);
+        box-shadow: 0 14px 28px rgba(159, 79, 34, 0.24);
+      }
+
+      .secondary-btn {
+        background: #fff;
+        color: var(--ink);
+        border: 1px solid var(--line);
+      }
+
+      .ghost-btn {
+        background: rgba(29, 106, 114, 0.1);
+        color: var(--accent);
+      }
+
+      .status-banner {
+        margin-top: 16px;
+        padding: 14px 16px;
+        border-radius: var(--radius-md);
+        font-size: 0.95rem;
+        line-height: 1.5;
+        display: none;
+      }
+
+      .status-banner.show {
+        display: block;
+      }
+
+      .status-banner.error {
+        color: #7c3600;
+        background: rgba(255, 232, 214, 0.9);
+        border: 1px solid rgba(183, 93, 22, 0.22);
+      }
+
+      .status-banner.success {
+        color: #0f5f39;
+        background: rgba(222, 244, 232, 0.9);
+        border: 1px solid rgba(31, 107, 69, 0.18);
+      }
+
+      .status-banner.loading {
+        color: #1c2b63;
+        background: rgba(223, 231, 255, 0.9);
+        border: 1px solid rgba(46, 54, 97, 0.18);
+      }
+
+      .output-panel {
+        position: sticky;
+        top: 24px;
+        height: fit-content;
+      }
+
+      .summary-box {
+        min-height: 480px;
+        padding: 22px;
+        border-radius: var(--radius-lg);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 249, 242, 0.96));
+        border: 1px solid var(--line);
+        white-space: pre-wrap;
+        line-height: 1.7;
+      }
+
+      .summary-placeholder {
+        color: var(--muted);
+      }
+
+      .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .pill {
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--brand-soft);
+        color: var(--brand);
+        font-size: 0.85rem;
+        font-weight: 700;
+      }
+
+      .specialist-note {
+        margin-top: -6px;
+        margin-bottom: 16px;
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .site-footer {
+        margin-top: 18px;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 0.92rem;
+        letter-spacing: 0.04em;
+      }
+
+      .inline-note {
+        font-size: 0.9rem;
+        color: var(--muted);
+        margin-top: -2px;
+      }
+
+      .print-only {
+        display: none;
+      }
+
+      .screen-hidden {
+        display: none;
+      }
+
+      @media (max-width: 1100px) {
+        .output-panel {
+          position: static;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .page-shell {
+          width: min(100% - 18px, 100%);
+          margin-top: 12px;
+        }
+
+        .hero-card,
+        .panel,
+        .output-panel {
+          padding: 18px;
+          border-radius: 22px;
+        }
+
+        .grid.two,
+        .grid.three,
+        .checkbox-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .hero-top {
+          align-items: flex-start;
+        }
+
+        .brand-lockup {
+          width: 72px;
+        }
+      }
+
+      @media print {
+        body {
+          background: #fff;
+        }
+
+        .hero-card,
+        .panel,
+        .site-footer,
+        .status-banner,
+        .print-trigger,
+        .output-header {
+          display: none;
+        }
+
+        .page-shell,
+        .output-panel {
+          width: 100%;
+          margin: 0;
+          box-shadow: none;
+        }
+
+        .output-panel,
+        .summary-box {
+          border: 0;
+          padding: 0;
+          background: #fff;
+        }
+
+        .summary-box {
+          min-height: auto;
+          white-space: pre-wrap;
+        }
+
+        .output-header p {
+          display: none;
+        }
+
+        .print-only {
+          display: block;
+          margin: 0 0 20px;
+          font-size: 1.9rem;
+          font-weight: 800;
+          color: #111;
+        }
+
+        .output-panel {
+          position: static;
+          box-shadow: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page-shell">
+        <article class="hero-card">
+          <div class="hero-top">
+            <img class="brand-lockup" src="assets/logo-modelo-office.jpg" alt="Logo Modelo Office" />
+            <span class="eyebrow">Modelo Office</span>
+          </div>
+          <h1>Générateur de synthèses SEO et SEA</h1>
+          <p>
+            Cette page centralise la préparation d'un rapport trimestriel ou semestriel Looker
+            Studio. L'utilisateur renseigne le contexte client, ajoute les fichiers utiles et
+            obtient une synthèse claire, pédagogique et prête pour export PDF.
+          </p>
+        </article>
+
+      <div class="layout">
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Préparation du rapport</h2>
+              <p>
+                Remplissez uniquement les éléments utiles à la préparation du résumé client. Les
+                champs s'affichent automatiquement selon les offres actives.
+              </p>
+            </div>
+            <div class="pill-row">
+              <span class="pill">Rapport PDF obligatoire</span>
+              <span class="pill">Formulaire simplifié CDP</span>
+            </div>
+          </div>
+
+          <form id="report-form">
+            <section class="section-block">
+              <h3>1. Contexte client</h3>
+              <div class="grid two">
+                <div class="field">
+                  <label for="client-name">Nom du client</label>
+                  <input id="client-name" name="clientName" type="text" placeholder="Ex : Agence Durand" required />
+                </div>
+                <div class="field">
+                  <label>Période analysée</label>
+                  <div class="grid two">
+                    <input id="start-date" name="startDate" type="date" required />
+                    <input id="end-date" name="endDate" type="date" required />
+                  </div>
+                </div>
+              </div>
+              <div class="grid three">
+                <div class="field">
+                  <label for="seo-pack">Pack SEO</label>
+                  <select id="seo-pack" name="seoPack">
+                    <option value="">Non actif</option>
+                    <option value="Essentiel">Essentiel</option>
+                    <option value="Signature">Signature</option>
+                    <option value="Excellence">Excellence</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="sea-pack">Pack SEA</label>
+                  <select id="sea-pack" name="seaPack">
+                    <option value="">Non actif</option>
+                    <option value="Signature">Signature</option>
+                    <option value="Excellence">Excellence</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="report-type">Type de rapport</label>
+                  <select id="report-type" name="reportType">
+                    <option value="Trimestriel">Trimestriel</option>
+                    <option value="Semestriel">Semestriel</option>
+                  </select>
+                </div>
+              </div>
+            </section>
+
+            <section class="section-block">
+              <h3>2. Pièces jointes</h3>
+              <p>Le rapport principal est obligatoire.</p>
+              <div class="dropzone">
+                  <label for="main-report">Rapport Looker Studio / PDF principal</label>
+                  <input id="main-report" name="mainReport" type="file" accept=".pdf,.ppt,.pptx,.csv,.xlsx,.xls,.txt" multiple required />
+                  <span class="file-note">Ajoutez un ou plusieurs documents de référence.</span>
+                  <div class="tag-list" id="main-report-tags"></div>
+              </div>
+            </section>
+
+            <section id="seo-section" class="section-block hidden">
+              <h3>3. Bloc SEO</h3>
+              <div class="field">
+                <label for="seo-actions">Optimisations réalisées *</label>
+                <textarea id="seo-actions" name="seoActions" placeholder="Essentiel : 6 interventions. Signature / Excellence : 3 principales. Une ligne par action."></textarea>
+              </div>
+              <div class="field">
+                <label for="keyword-table">Mots-clés suivis (facultatif)</label>
+                <div class="inline-note">Tu peux laisser ce champ vide si le rapport ou le CDP ne fournit pas de suivi mots-clés.</div>
+                <textarea id="keyword-table" name="keywordTable" placeholder="Une ligne par mot-clé, au format : mot-clé | clics récents | clics précédents | position récente | position précédente | évolution"></textarea>
+              </div>
+              <div class="field">
+                <label for="seo-comment">Commentaire personnel SEO (facultatif)</label>
+                <textarea id="seo-comment" name="seoComment" placeholder="Ajoutez un commentaire du chef de projet si nécessaire."></textarea>
+              </div>
+            </section>
+
+            <section id="sea-section" class="section-block hidden">
+              <h3>4. Bloc SEA</h3>
+              <fieldset class="field">
+                <legend>Actions SEA effectuées pendant la période</legend>
+                <div class="checkbox-grid" id="sea-actions-grid">
+                  <label><input type="checkbox" value="Respect du budget : vérification du budget signé en début de prestation." />Respect du budget</label>
+                  <label><input type="checkbox" value="Contrôle global : analyse des clics, impressions, conversions et de leurs évolutions." />Contrôle global</label>
+                  <label><input type="checkbox" value="Suivi des recommandations Google : prise en compte des recommandations pour optimiser la campagne." />Suivi des recommandations Google</label>
+                  <label><input type="checkbox" value="Vérification de la diffusion des annonces : contrôle de l'activité des campagnes et des refus éventuels." />Vérification de la diffusion</label>
+                  <label><input type="checkbox" value="Mise à jour des mots-clés : ajout, modification ou mise en veille selon les performances." />Mise à jour des mots-clés</label>
+                  <label><input type="checkbox" value="Analyse des termes de recherche : exclusion des recherches non pertinentes." />Analyse des termes de recherche</label>
+                  <label><input type="checkbox" value="Analyse du CPC : suivi du cout par clic et ajustements associes." />Analyse du CPC</label>
+                  <label><input type="checkbox" value="Optimisation des audiences : ajustement des cibles selon les zones, horaires, appareils et profils." />Optimisation des audiences</label>
+                </div>
+              </fieldset>
+              <div class="field">
+                <label for="sea-comment">Commentaire personnel SEA (facultatif)</label>
+                <textarea id="sea-comment" name="seaComment" placeholder="Ajoutez un commentaire du chef de projet si nécessaire."></textarea>
+              </div>
+            </section>
+
+            <div class="actions">
+              <button class="primary-btn" type="submit">Générer la synthèse</button>
+            </div>
+            <div id="status-banner" class="status-banner"></div>
+          </form>
+        </section>
+
+        <aside class="output-panel">
+          <div class="output-header">
+            <div>
+              <h2>Synthèse générale</h2>
+              <p>L’aperçu s’actualise après génération du formulaire.</p>
+            </div>
+          </div>
+          <h3 class="print-only">Synthèse générale</h3>
+          <div id="summary-output" class="summary-box">
+            <span class="summary-placeholder">
+              La synthèse apparaîtra ici après génération du formulaire.
+            </span>
+          </div>
+          <div id="post-generate-actions" class="actions screen-hidden">
+            <button class="ghost-btn print-trigger" type="button" id="print-summary">Exporter en PDF</button>
+          </div>
+        </aside>
+      </div>
+      <footer class="site-footer">Creado por HM</footer>
+    </main>
+
+    <script>
+      const form = document.getElementById("report-form");
+      const seoPack = document.getElementById("seo-pack");
+      const seaPack = document.getElementById("sea-pack");
+      const seoSection = document.getElementById("seo-section");
+      const seaSection = document.getElementById("sea-section");
+      const statusBanner = document.getElementById("status-banner");
+      const summaryOutput = document.getElementById("summary-output");
+      const mainReport = document.getElementById("main-report");
+      const mainReportTags = document.getElementById("main-report-tags");
+      const printButton = document.getElementById("print-summary");
+      const postGenerateActions = document.getElementById("post-generate-actions");
+
+      const seaActionInputs = Array.from(
+        document.querySelectorAll('#sea-actions-grid input[type="checkbox"]')
+      );
+
+      function toggleConditionalSections() {
+        seoSection.classList.toggle("hidden", !seoPack.value);
+        seaSection.classList.toggle("hidden", !seaPack.value);
+      }
+
+      function updateFileTags(input, container) {
+        const tags = Array.from(input.files || []);
+        container.innerHTML = "";
+        tags.forEach((file) => {
+          const tag = document.createElement("span");
+          tag.className = "tag";
+          tag.textContent = file.name;
+          container.appendChild(tag);
+        });
+      }
+
+      function setStatus(message, kind) {
+        statusBanner.textContent = message;
+        statusBanner.className = `status-banner show ${kind}`;
+      }
+
+      function clearStatus() {
+        statusBanner.textContent = "";
+        statusBanner.className = "status-banner";
+      }
+
+      async function parseApiResponse(response) {
+        const rawText = await response.text();
+
+        if (!rawText) {
+          throw new Error("Le serveur n'a retourné aucune réponse exploitable.");
+        }
+
+        try {
+          return JSON.parse(rawText);
+        } catch (error) {
+          if (rawText.includes("<!DOCTYPE html") || rawText.includes("<html")) {
+            throw new Error(
+              "La page semble être ouverte hors du serveur Node.js. Lancez l'application avec npm start puis ouvrez http://localhost:3000."
+            );
+          }
+
+          throw new Error("La réponse du serveur n'est pas un JSON valide.");
+        }
+      }
+
+      function getSelectedSeaActions() {
+        return seaActionInputs
+          .filter((input) => input.checked)
+          .map((input) => input.value);
+      }
+
+      function autoSelectSeaActions() {
+        const chosen = seaActionInputs.filter((input) => input.checked);
+        if (chosen.length > 0) {
+          return chosen.map((input) => input.value);
+        }
+
+        const defaults = [0, 1, 3, 7];
+        return defaults.map((index) => seaActionInputs[index].value);
+      }
+
+      function formatOfferLine(seo, sea) {
+        const offers = [];
+        if (seo) offers.push(`SEO ${seo}`);
+        if (sea) offers.push(`SEA ${sea}`);
+        return offers.length ? offers.join(" | ") : "Aucune offre active";
+      }
+
+      function listFromTextarea(value, fallbackItems) {
+        const cleanItems = value
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean);
+
+        return cleanItems.length ? cleanItems : fallbackItems;
+      }
+
+      function serializeForm() {
+        const startDate = document.getElementById("start-date").value;
+        const endDate = document.getElementById("end-date").value;
+
+        return {
+          clientName: document.getElementById("client-name").value.trim(),
+          startDate,
+          endDate,
+          analysisPeriod: startDate && endDate ? `${startDate} au ${endDate}` : "",
+          reportType: document.getElementById("report-type").value,
+          seoPack: seoPack.value,
+          seaPack: seaPack.value,
+          seoActions: document.getElementById("seo-actions").value.trim(),
+          keywordTable: document.getElementById("keyword-table").value.trim(),
+          seoComment: document.getElementById("seo-comment").value.trim(),
+          seaComment: document.getElementById("sea-comment").value.trim()
+        };
+      }
+
+      function validateForm(data) {
+        if (!data.clientName || !data.startDate || !data.endDate) {
+          return "Merci de renseigner le nom du client et la période analysée.";
+        }
+
+        if (data.endDate < data.startDate) {
+          return "La date de fin doit être postérieure à la date de début.";
+        }
+
+        if (!mainReport.files.length) {
+          return "Merci de joindre le rapport PDF principal avant de poursuivre.";
+        }
+
+        return "";
+      }
+
+      seoPack.addEventListener("change", toggleConditionalSections);
+      seaPack.addEventListener("change", toggleConditionalSections);
+      mainReport.addEventListener("change", () => updateFileTags(mainReport, mainReportTags));
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        clearStatus();
+        postGenerateActions.classList.add("screen-hidden");
+
+        if (window.location.protocol === "file:") {
+          setStatus(
+            "Cette page doit être lancée via le serveur Node.js. Utilisez npm start puis ouvrez http://localhost:3000.",
+            "error"
+          );
+          return;
+        }
+
+        const data = serializeForm();
+        const validationMessage = validateForm(data);
+
+        if (validationMessage) {
+          setStatus(validationMessage, "error");
+          return;
+        }
+
+        const payload = new FormData();
+        payload.append("clientName", data.clientName);
+        payload.append("analysisPeriod", data.analysisPeriod);
+        payload.append("startDate", data.startDate);
+        payload.append("endDate", data.endDate);
+        payload.append("reportType", data.reportType);
+        payload.append("seoPack", data.seoPack);
+        payload.append("seaPack", data.seaPack);
+        payload.append("seoActions", data.seoActions);
+        payload.append("keywordTable", data.keywordTable);
+        payload.append("seoComment", data.seoComment);
+        payload.append("seaComment", data.seaComment);
+
+        getSelectedSeaActions().forEach((action) => {
+          payload.append("seaActions", action);
+        });
+
+        Array.from(mainReport.files || []).forEach((file) => {
+          payload.append("mainReport", file);
+        });
+
+        summaryOutput.textContent =
+          "Génération de la synthèse en cours... Le rapport est en train d'être analysé par le modèle.";
+        setStatus("Analyse du rapport en cours...", "loading");
+
+        try {
+          const response = await fetch("/api/generate-summary", {
+            method: "POST",
+            body: payload
+          });
+
+          const result = await parseApiResponse(response);
+
+          if (!response.ok) {
+            throw new Error(result.error || "La synthèse n'a pas pu être générée.");
+          }
+
+          summaryOutput.textContent = result.summary;
+          postGenerateActions.classList.remove("screen-hidden");
+          setStatus("La synthèse a été générée. Vous pouvez maintenant l'exporter en PDF.", "success");
+        } catch (error) {
+          summaryOutput.innerHTML =
+            '<span class="summary-placeholder">La synthèse n\'a pas pu être générée. Vérifiez la configuration API puis réessayez.</span>';
+          postGenerateActions.classList.add("screen-hidden");
+          setStatus(error.message, "error");
+        }
+      });
+
+      function handlePrint() {
+        if (summaryOutput.textContent.trim() === "" || summaryOutput.querySelector(".summary-placeholder")) {
+          setStatus("Générez d'abord une synthèse avant de lancer l'export PDF.", "error");
+          return;
+        }
+
+        window.print();
+      }
+
+      printButton.addEventListener("click", handlePrint);
+
+      toggleConditionalSections();
+    </script>
+  </body>
+</html>
