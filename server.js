@@ -17,7 +17,7 @@ const upload = multer({
 });
 
 const port = Number(process.env.PORT || 3000);
-const host = process.env.HOST || "127.0.0.1";
+const host = "0.0.0.0";
 const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 const apiKey = process.env.GEMINI_API_KEY;
 const genAI = apiKey && apiKey !== "your_gemini_api_key_here" ? new GoogleGenAI({ apiKey }) : null;
