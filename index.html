@@ -375,7 +375,23 @@
         line-height: 1.7;
       }
 
+      .summary-box[contenteditable="true"] {
+        cursor: text;
+      }
+
+      .summary-box[contenteditable="true"]:focus {
+        outline: none;
+        border-color: rgba(29, 106, 114, 0.35);
+        box-shadow: 0 0 0 4px rgba(29, 106, 114, 0.08);
+      }
+
       .summary-placeholder {
+        color: var(--muted);
+      }
+
+      .summary-edit-note {
+        margin: 10px 0 0;
+        font-size: 0.9rem;
         color: var(--muted);
       }
 
@@ -471,6 +487,7 @@
         .site-footer,
         .status-banner,
         .print-trigger,
+        .summary-edit-note,
         .output-header {
           display: none;
         }
@@ -652,11 +669,14 @@
             </div>
           </div>
           <h3 class="print-only">Synthèse générale</h3>
-          <div id="summary-output" class="summary-box">
+          <div id="summary-output" class="summary-box" contenteditable="false" aria-readonly="true" aria-label="Synthèse générée">
             <span class="summary-placeholder">
               La synthèse apparaîtra ici après génération du formulaire.
             </span>
           </div>
+          <p id="summary-edit-note" class="summary-edit-note screen-hidden">
+            Vous pouvez modifier manuellement le texte avant l’export PDF.
+          </p>
           <div id="post-generate-actions" class="actions screen-hidden">
             <button class="ghost-btn print-trigger" type="button" id="print-summary">Exporter en PDF</button>
           </div>
@@ -677,6 +697,9 @@
       const mainReportTags = document.getElementById("main-report-tags");
       const printButton = document.getElementById("print-summary");
       const postGenerateActions = document.getElementById("post-generate-actions");
+      const summaryEditNote = document.getElementById("summary-edit-note");
+      const retryStatusMessage =
+        "Analyse du rapport en cours... Le modèle est momentanément sollicité, nouvelle tentative automatique.";
 
       const seaActionInputs = Array.from(
         document.querySelectorAll('#sea-actions-grid input[type="checkbox"]')
@@ -706,6 +729,22 @@
       function clearStatus() {
         statusBanner.textContent = "";
         statusBanner.className = "status-banner";
+      }
+
+      function setSummaryEditable(isEditable) {
+        summaryOutput.setAttribute("contenteditable", isEditable ? "true" : "false");
+        summaryOutput.setAttribute("aria-readonly", isEditable ? "false" : "true");
+        summaryEditNote.classList.toggle("screen-hidden", !isEditable);
+      }
+
+      function showSummaryPlaceholder(message) {
+        setSummaryEditable(false);
+        summaryOutput.innerHTML = "";
+
+        const placeholder = document.createElement("span");
+        placeholder.className = "summary-placeholder";
+        placeholder.textContent = message;
+        summaryOutput.appendChild(placeholder);
       }
 
       async function parseApiResponse(response) {
@@ -841,9 +880,9 @@
           payload.append("mainReport", file);
         });
 
-        summaryOutput.textContent =
-          "Génération de la synthèse en cours... Le rapport est en train d'être analysé par le modèle.";
-        setStatus("Analyse du rapport en cours...", "loading");
+        setSummaryEditable(false);
+        summaryOutput.textContent = retryStatusMessage;
+        setStatus(retryStatusMessage, "loading");
 
         try {
           const response = await fetch("/api/generate-summary", {
@@ -858,22 +897,27 @@
           }
 
           summaryOutput.textContent = result.summary;
+          setSummaryEditable(true);
           postGenerateActions.classList.remove("screen-hidden");
-          setStatus("La synthèse a été générée. Vous pouvez maintenant l'exporter en PDF.", "success");
+          setStatus("La synthèse a été générée. Vous pouvez la modifier puis l'exporter en PDF.", "success");
         } catch (error) {
-          summaryOutput.innerHTML =
-            '<span class="summary-placeholder">La synthèse n\'a pas pu être générée. Vérifiez la configuration API puis réessayez.</span>';
+          showSummaryPlaceholder(
+            "La synthèse n'a pas pu être générée. Vérifiez la configuration API puis réessayez."
+          );
           postGenerateActions.classList.add("screen-hidden");
           setStatus(error.message, "error");
         }
       });
 
       function handlePrint() {
-        if (summaryOutput.textContent.trim() === "" || summaryOutput.querySelector(".summary-placeholder")) {
+        const editedSummary = summaryOutput.innerText.trim();
+
+        if (editedSummary === "" || summaryOutput.querySelector(".summary-placeholder")) {
           setStatus("Générez d'abord une synthèse avant de lancer l'export PDF.", "error");
           return;
         }
 
+        summaryOutput.textContent = editedSummary;
         window.print();
       }
 

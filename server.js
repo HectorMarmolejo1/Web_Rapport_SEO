@@ -19,8 +19,11 @@ const upload = multer({
 const port = Number(process.env.PORT || 3000);
 const host = "0.0.0.0";
 const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const fallbackModel = "gemini-2.5-flash-lite";
 const apiKey = process.env.GEMINI_API_KEY;
 const genAI = apiKey && apiKey !== "your_gemini_api_key_here" ? new GoogleGenAI({ apiKey }) : null;
+const geminiBusyMessage =
+  "Le service Gemini est temporairement saturé. Merci de réessayer dans quelques minutes.";
 
 app.use(express.static(__dirname));
 app.use(express.json());
@@ -246,7 +249,7 @@ avec une conclusion courte sur l'adequation entre l'offre et la demande locale.
 
 8. Actions SEO a venir
 Titre cette section exactement :
-"🚀 8. Actions SEO à venir"
+"8. Actions SEO à venir"
 
 Commence obligatoirement par la phrase :
 "Voici les 3 actions SEO que notre equipe mettra en place au cours des prochains mois :"
@@ -267,7 +270,7 @@ IMPORTANT :
 
 9. Conclusion
 Titre cette section exactement :
-"✅ 9. Conclusion"
+"9. Conclusion"
 
 Redige au moins deux paragraphes fluides, sans liste.
 La conclusion doit :
@@ -286,6 +289,92 @@ FORMAT DE SORTIE
 - Le rendu final doit ressembler a un rapport client attendu, et non a une reponse generique
 - Respecte strictement les retours a la ligne et les espacements demandes.
 `.trim();
+}
+
+function wait(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function isTemporaryGeminiUnavailable(error) {
+  const status = error?.status || error?.statusCode || error?.code || error?.error?.code;
+  const message = [
+    error?.message,
+    error?.statusText,
+    error?.error?.message,
+    error?.error?.status,
+    error?.cause?.message
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return (
+    status === 503 ||
+    status === "503" ||
+    message.includes("503") ||
+    message.includes("unavailable") ||
+    message.includes("service unavailable") ||
+    message.includes("high demand") ||
+    message.includes("overloaded") ||
+    message.includes("temporarily") ||
+    message.includes("surcharge") ||
+    message.includes("satur")
+  );
+}
+
+function createUserFacingError(message) {
+  const error = new Error(message);
+  error.isUserFacing = true;
+  return error;
+}
+
+async function retryGenerateContent({ contents, config }) {
+  const retryDelays = [2000, 5000, 10000];
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= 4; attempt += 1) {
+    console.log(`Tentative Gemini ${attempt}/4`);
+
+    try {
+      return await genAI.models.generateContent({
+        model,
+        contents,
+        config
+      });
+    } catch (error) {
+      lastError = error;
+
+      if (!isTemporaryGeminiUnavailable(error)) {
+        throw error;
+      }
+
+      if (attempt < 4) {
+        await wait(retryDelays[attempt - 1]);
+      }
+    }
+  }
+
+  if (model !== fallbackModel) {
+    console.log(`Fallback vers ${fallbackModel}`);
+
+    try {
+      return await genAI.models.generateContent({
+        model: fallbackModel,
+        contents,
+        config
+      });
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  if (isTemporaryGeminiUnavailable(lastError)) {
+    throw createUserFacingError(geminiBusyMessage);
+  }
+
+  throw lastError;
 }
 
 app.post("/api/generate-summary", upload.array("mainReport", 5), async (req, res) => {
@@ -317,8 +406,7 @@ app.post("/api/generate-summary", upload.array("mainReport", 5), async (req, res
       }
     ];
 
-    const response = await genAI.models.generateContent({
-      model,
+    const response = await retryGenerateContent({
       contents,
       config: {
         systemInstruction:
@@ -335,12 +423,12 @@ app.post("/api/generate-summary", upload.array("mainReport", 5), async (req, res
       summary
     });
   } catch (error) {
-    const message =
-      error?.message ||
-      error?.error?.message ||
-      "Une erreur est survenue pendant la generation de la synthese.";
+    const message = error?.isUserFacing
+      ? error.message
+      : "Une erreur est survenue pendant la génération de la synthèse.";
+    const statusCode = error?.isUserFacing ? 503 : 500;
 
-    return res.status(500).json({ error: message });
+    return res.status(statusCode).json({ error: message });
   }
 });
 
