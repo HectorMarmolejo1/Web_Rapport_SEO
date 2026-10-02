@@ -25,7 +25,11 @@ const genAI = apiKey && apiKey !== "your_gemini_api_key_here" ? new GoogleGenAI(
 const geminiBusyMessage =
   "Le service Gemini est temporairement saturé. Merci de réessayer dans quelques minutes.";
 
-app.use(express.static(__dirname));
+// Exposer uniquement l'interface et les assets, jamais le reste du dépôt.
+app.get(["/", "/index.html"], (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
+app.use("/assets", express.static(path.join(__dirname, "assets")));
 app.use(express.json());
 
 function buildPrompt(fields) {
@@ -433,5 +437,5 @@ app.post("/api/generate-summary", upload.array("mainReport", 5), async (req, res
 });
 
 app.listen(port, host, () => {
-  console.log(`Modelo Office app running on http://${host}:${port}`);
+  console.log(`NUESTRO app running on http://${host}:${port}`);
 });

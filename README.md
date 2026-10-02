@@ -1,15 +1,19 @@
-# Modelo Office - Generateur de synthese SEO / SEA
+# NUESTRO - Générateur de synthèses SEO / SEA
 
-## Prerequis
+NUESTRO génère des synthèses client SEO et SEA à partir de rapports PDF / Looker Studio,
+à l'aide de Gemini. La synthèse peut être modifiée manuellement avant l'export PDF.
 
-- Node.js 18+
-- Une cle API Gemini
+## Prérequis
 
-## Installation
+- Node.js 24.x
+- npm 11.x
+- Une clé API Gemini
+
+## Installation locale
 
 1. Copier `.env.example` vers `.env`
-2. Renseigner `GEMINI_API_KEY`
-3. Installer les dependances :
+2. Renseigner `GEMINI_API_KEY` dans `.env` (ce fichier ne doit jamais être commité)
+3. Installer les dépendances :
 
 ```bash
 npm install
@@ -21,21 +25,27 @@ npm install
 npm start
 ```
 
+Pour relancer automatiquement le serveur à chaque modification : `npm run dev`.
+
 5. Ouvrir [http://localhost:3000](http://localhost:3000)
 
 ## Variables d'environnement
 
 - `GEMINI_API_KEY` : obligatoire
-- `GEMINI_MODEL` : optionnel, par defaut `gemini-2.5-flash-lite`
-- `PORT` : optionnel, par defaut `3000`
-- `HOST` : optionnel, par defaut `127.0.0.1`
+- `GEMINI_MODEL` : optionnel, par défaut `gemini-2.5-flash` (repli automatique sur `gemini-2.5-flash-lite` si le service est saturé)
+- `PORT` : optionnel, par défaut `3000` (défini automatiquement par Render en production)
+
+Le serveur écoute toujours sur `0.0.0.0`, ce qui est requis par Render.
 
 ## Fonctionnement
 
 - Le frontend envoie le formulaire et le rapport principal au backend.
-- Le backend transmet le PDF et les consignes metier au modele Gemini.
-- Le modele renvoie une synthese complete qui s'affiche dans l'aperçu.
+- Les fichiers sont traités en mémoire et ne sont pas enregistrés sur le serveur.
+- Le backend transmet le PDF et les consignes métier au modèle Gemini.
+- En cas d'indisponibilité temporaire de Gemini (503), le backend réessaie automatiquement.
+- Le modèle renvoie une synthèse complète qui s'affiche dans l'aperçu, modifiable avant l'export PDF.
 
-## Element encore necessaire
+## Déploiement
 
-Il me faut uniquement ta cle API Gemini pour que la generation reelle fonctionne.
+L'application est déployée sur Render (Web Service). Chaque push sur la branche `main`
+déclenche un déploiement automatique.
