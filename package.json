@@ -1,7 +1,7 @@
 {
-  "name": "modelo-office-report-generator",
+  "name": "nuestro-report-generator",
   "version": "1.0.0",
-  "description": "Generateur de synthese SEO et SEA pour rapports Looker Studio",
+  "description": "NUESTRO - Générateur de synthèses SEO et SEA pour rapports Looker Studio",
   "type": "module",
   "scripts": {
     "start": "node server.js",

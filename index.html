@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Générateur de synthèses SEO | Modelo Lead Factory</title>
+    <title>Générateur de synthèses SEO | NUESTRO</title>
     <style>
       :root {
         --bg: #2e3661;
@@ -534,8 +534,8 @@
     <main class="page-shell">
         <article class="hero-card">
           <div class="hero-top">
-            <img class="brand-lockup" src="assets/logo-modelo-office.jpg" alt="Logo Modelo Office" />
-            <span class="eyebrow">Modelo Office</span>
+            <img class="brand-lockup" src="assets/logo-nuestro.webp" alt="Logo NUESTRO" />
+            <span class="eyebrow">NUESTRO</span>
           </div>
           <h1>Générateur de synthèses SEO et SEA</h1>
           <p>
@@ -610,8 +610,8 @@
               <p>Le rapport principal est obligatoire.</p>
               <div class="dropzone">
                   <label for="main-report">Rapport Looker Studio / PDF principal</label>
-                  <input id="main-report" name="mainReport" type="file" accept=".pdf,.ppt,.pptx,.csv,.xlsx,.xls,.txt" multiple required />
-                  <span class="file-note">Ajoutez un ou plusieurs documents de référence.</span>
+                  <input id="main-report" name="mainReport" type="file" accept=".pdf,.csv,.txt" multiple required />
+                  <span class="file-note">Ajoutez un ou plusieurs documents de référence (PDF, CSV ou TXT, 5 fichiers maximum, 20 Mo par fichier).</span>
                   <div class="tag-list" id="main-report-tags"></div>
               </div>
             </section>
@@ -644,7 +644,7 @@
                   <label><input type="checkbox" value="Vérification de la diffusion des annonces : contrôle de l'activité des campagnes et des refus éventuels." />Vérification de la diffusion</label>
                   <label><input type="checkbox" value="Mise à jour des mots-clés : ajout, modification ou mise en veille selon les performances." />Mise à jour des mots-clés</label>
                   <label><input type="checkbox" value="Analyse des termes de recherche : exclusion des recherches non pertinentes." />Analyse des termes de recherche</label>
-                  <label><input type="checkbox" value="Analyse du CPC : suivi du cout par clic et ajustements associes." />Analyse du CPC</label>
+                  <label><input type="checkbox" value="Analyse du CPC : suivi du coût par clic et ajustements associés." />Analyse du CPC</label>
                   <label><input type="checkbox" value="Optimisation des audiences : ajustement des cibles selon les zones, horaires, appareils et profils." />Optimisation des audiences</label>
                 </div>
               </fieldset>
@@ -682,7 +682,7 @@
           </div>
         </aside>
       </div>
-      <footer class="site-footer">Creado por HM</footer>
+      <footer class="site-footer">Créé par HM</footer>
     </main>
 
     <script>
@@ -700,6 +700,10 @@
       const summaryEditNote = document.getElementById("summary-edit-note");
       const retryStatusMessage =
         "Analyse du rapport en cours... Le modèle est momentanément sollicité, nouvelle tentative automatique.";
+
+      const supportedExtensions = [".pdf", ".csv", ".txt"];
+      const maxFileCount = 5;
+      const maxFileSize = 20 * 1024 * 1024;
 
       const seaActionInputs = Array.from(
         document.querySelectorAll('#sea-actions-grid input[type="checkbox"]')
@@ -773,32 +777,6 @@
           .map((input) => input.value);
       }
 
-      function autoSelectSeaActions() {
-        const chosen = seaActionInputs.filter((input) => input.checked);
-        if (chosen.length > 0) {
-          return chosen.map((input) => input.value);
-        }
-
-        const defaults = [0, 1, 3, 7];
-        return defaults.map((index) => seaActionInputs[index].value);
-      }
-
-      function formatOfferLine(seo, sea) {
-        const offers = [];
-        if (seo) offers.push(`SEO ${seo}`);
-        if (sea) offers.push(`SEA ${sea}`);
-        return offers.length ? offers.join(" | ") : "Aucune offre active";
-      }
-
-      function listFromTextarea(value, fallbackItems) {
-        const cleanItems = value
-          .split("\n")
-          .map((line) => line.trim())
-          .filter(Boolean);
-
-        return cleanItems.length ? cleanItems : fallbackItems;
-      }
-
       function serializeForm() {
         const startDate = document.getElementById("start-date").value;
         const endDate = document.getElementById("end-date").value;
@@ -829,6 +807,25 @@
 
         if (!mainReport.files.length) {
           return "Merci de joindre le rapport PDF principal avant de poursuivre.";
+        }
+
+        const files = Array.from(mainReport.files);
+
+        if (files.length > maxFileCount) {
+          return "Vous pouvez joindre au maximum 5 fichiers.";
+        }
+
+        const unsupportedFile = files.find((file) => {
+          const extension = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
+          return !supportedExtensions.includes(extension);
+        });
+
+        if (unsupportedFile) {
+          return `Le fichier « ${unsupportedFile.name} » n'est pas pris en charge. Merci de joindre un fichier PDF, CSV ou TXT.`;
+        }
+
+        if (files.some((file) => file.size > maxFileSize)) {
+          return "Un des fichiers dépasse la taille maximale autorisée (20 Mo).";
         }
 
         return "";
