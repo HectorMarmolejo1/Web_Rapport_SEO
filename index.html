@@ -421,6 +421,66 @@
         display: none !important;
       }
 
+      .generation-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: grid;
+        place-items: center;
+        padding: 16px;
+        background: rgba(30, 36, 72, 0.55);
+        backdrop-filter: blur(4px);
+      }
+
+      .generation-card {
+        width: min(420px, 100%);
+        padding: 32px 28px;
+        border-radius: var(--radius-xl);
+        background: var(--surface-strong);
+        box-shadow: var(--shadow);
+        text-align: center;
+      }
+
+      .generation-spinner {
+        width: 48px;
+        height: 48px;
+        margin: 0 auto 18px;
+        border-radius: 50%;
+        border: 4px solid var(--brand-soft);
+        border-top-color: var(--brand);
+        animation: generation-spin 0.9s linear infinite;
+      }
+
+      .generation-title {
+        margin: 0 0 8px;
+        font-size: 1.25rem;
+        font-weight: 800;
+      }
+
+      .generation-message {
+        margin: 0;
+        min-height: 1.5em;
+        color: var(--muted);
+      }
+
+      .generation-hint {
+        margin: 14px 0 0;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      @keyframes generation-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .generation-spinner {
+          animation-duration: 3s;
+        }
+      }
+
       .site-footer {
         margin-top: 18px;
         text-align: center;
@@ -485,6 +545,7 @@
         .hero-card,
         .panel,
         .site-footer,
+        .generation-overlay,
         .status-banner,
         .print-trigger,
         .summary-edit-note,
@@ -686,6 +747,15 @@
       <footer class="site-footer">NUESTRO</footer>
     </main>
 
+    <div id="generation-overlay" class="generation-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="generation-title">
+      <div class="generation-card">
+        <div class="generation-spinner" aria-hidden="true"></div>
+        <p id="generation-title" class="generation-title">Génération en cours</p>
+        <p id="generation-message" class="generation-message" aria-live="polite"></p>
+        <p class="generation-hint">Cela peut prendre jusqu'à une minute.</p>
+      </div>
+    </div>
+
     <script>
       const form = document.getElementById("report-form");
       const seoPack = document.getElementById("seo-pack");
@@ -699,6 +769,18 @@
       const printButton = document.getElementById("print-summary");
       const postGenerateActions = document.getElementById("post-generate-actions");
       const summaryEditNote = document.getElementById("summary-edit-note");
+      const generationOverlay = document.getElementById("generation-overlay");
+      const generationMessage = document.getElementById("generation-message");
+      const submitButton = form.querySelector('button[type="submit"]');
+      // Messages de la fenêtre d'attente (usage interne : tutoiement).
+      const generationMessages = [
+        "Nous préparons ton rapport…",
+        "Analyse de tes documents en cours…",
+        "Rédaction de la synthèse…",
+        "Vérification des chiffres…",
+        "C'est presque prêt…"
+      ];
+      let generationTimer = null;
       const retryStatusMessage =
         "Analyse du rapport en cours... Le modèle est momentanément sollicité, nouvelle tentative automatique.";
 
@@ -734,6 +816,25 @@
       function clearStatus() {
         statusBanner.textContent = "";
         statusBanner.className = "status-banner";
+      }
+
+      function showGenerationOverlay() {
+        let index = 0;
+        generationMessage.textContent = generationMessages[index];
+        generationOverlay.classList.remove("hidden");
+        submitButton.disabled = true;
+
+        // Le dernier message reste affiché jusqu'à la fin de la génération.
+        generationTimer = setInterval(() => {
+          index = Math.min(index + 1, generationMessages.length - 1);
+          generationMessage.textContent = generationMessages[index];
+        }, 4000);
+      }
+
+      function hideGenerationOverlay() {
+        clearInterval(generationTimer);
+        generationOverlay.classList.add("hidden");
+        submitButton.disabled = false;
       }
 
       function setSummaryEditable(isEditable) {
@@ -881,6 +982,7 @@
         setSummaryEditable(false);
         summaryOutput.textContent = retryStatusMessage;
         setStatus(retryStatusMessage, "loading");
+        showGenerationOverlay();
 
         try {
           const response = await fetch("/api/generate-summary", {
@@ -904,6 +1006,8 @@
           );
           postGenerateActions.classList.add("screen-hidden");
           setStatus(error.message, "error");
+        } finally {
+          hideGenerationOverlay();
         }
       });
 
