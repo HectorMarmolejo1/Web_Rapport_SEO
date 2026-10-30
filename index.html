@@ -375,6 +375,20 @@
         line-height: 1.7;
       }
 
+      .summary-box p {
+        margin: 0 0 12px;
+      }
+
+      .summary-box .summary-heading {
+        margin: 22px 0 8px;
+        font-size: 1.15rem;
+        font-weight: 800;
+      }
+
+      .summary-box .summary-heading:first-child {
+        margin-top: 0;
+      }
+
       .summary-box[contenteditable="true"] {
         cursor: text;
       }
@@ -537,8 +551,14 @@
         }
       }
 
+      @page {
+        size: A4;
+        margin: 14mm 15mm 16mm;
+      }
+
       @media print {
         body {
+          min-height: 0;
           background: #fff;
         }
 
@@ -561,15 +581,34 @@
         }
 
         .output-panel,
-        .summary-box {
+        .summary-box,
+        .summary-box[contenteditable="true"]:focus {
           border: 0;
           padding: 0;
           background: #fff;
+          box-shadow: none;
         }
 
         .summary-box {
           min-height: auto;
           white-space: pre-wrap;
+          font-family: "Helvetica Neue", Arial, sans-serif;
+          font-size: 10pt;
+          line-height: 1.45;
+          color: #1f2552;
+        }
+
+        .summary-box p {
+          margin: 0 0 6pt;
+          orphans: 3;
+          widows: 3;
+        }
+
+        .summary-box .summary-heading {
+          margin: 12pt 0 4pt;
+          font-size: 12pt;
+          break-after: avoid;
+          page-break-after: avoid;
         }
 
         .output-header p {
@@ -578,10 +617,13 @@
 
         .print-only {
           display: block;
-          margin: 0 0 20px;
-          font-size: 1.9rem;
+          margin: 0 0 10pt;
+          font-family: "Helvetica Neue", Arial, sans-serif;
+          max-width: none;
+          font-size: 18pt;
+          line-height: 1.2;
           font-weight: 800;
-          color: #111;
+          color: #1f2552;
         }
 
         .output-panel {
@@ -730,14 +772,16 @@
               <p>L’aperçu s’actualise après génération du formulaire.</p>
             </div>
           </div>
-          <h3 class="print-only">Synthèse générale</h3>
+          <h1 id="print-title" class="print-only">Synthèse générale</h1>
           <div id="summary-output" class="summary-box" contenteditable="false" aria-readonly="true" aria-label="Synthèse générée">
             <span class="summary-placeholder">
               La synthèse apparaîtra ici après génération du formulaire.
             </span>
           </div>
           <p id="summary-edit-note" class="summary-edit-note screen-hidden">
-            Vous pouvez modifier manuellement le texte avant l’export PDF.
+            Vous pouvez modifier manuellement le texte avant l’export PDF. Pour un PDF sans
+            l’adresse du site en bas de page, décochez « En-têtes et pieds de page » dans la
+            fenêtre d’impression.
           </p>
           <div id="post-generate-actions" class="actions screen-hidden">
             <button class="ghost-btn print-trigger" type="button" id="print-summary">Exporter en PDF</button>
@@ -769,6 +813,9 @@
       const printButton = document.getElementById("print-summary");
       const postGenerateActions = document.getElementById("post-generate-actions");
       const summaryEditNote = document.getElementById("summary-edit-note");
+      const printTitle = document.getElementById("print-title");
+      const pageTitle = document.title;
+      let reportTitle = "";
       const generationOverlay = document.getElementById("generation-overlay");
       const generationMessage = document.getElementById("generation-message");
       const submitButton = form.querySelector('button[type="submit"]');
@@ -835,6 +882,75 @@
         clearInterval(generationTimer);
         generationOverlay.classList.add("hidden");
         submitButton.disabled = false;
+      }
+
+      // Titres de section : "3. Bilan", "5.1 Comparaison", éventuellement précédés d'un emoji.
+      function isSectionHeading(line) {
+        return (
+          line.length <= 90 &&
+          !/[.:;]$/.test(line) &&
+          /^(?:[\p{Extended_Pictographic}\uFE0F\u200D]+\s*)?\d{1,2}(?:\.\d{1,2}\.?|\.)\s+\p{L}/u.test(line)
+        );
+      }
+
+      function buildParagraph(lines) {
+        const paragraph = document.createElement("p");
+
+        lines.forEach((line, index) => {
+          if (index > 0) {
+            paragraph.appendChild(document.createTextNode("\n"));
+          }
+
+          // Met en gras le libellé des blocs "➤ Lecture :", "➤ Interprétation :", etc.
+          const label = line.match(/^(➤\s*[^:]{1,40}:)(.*)$/);
+
+          if (label) {
+            const strong = document.createElement("strong");
+            strong.textContent = label[1];
+            paragraph.append(strong, label[2]);
+          } else {
+            paragraph.appendChild(document.createTextNode(line));
+          }
+        });
+
+        return paragraph;
+      }
+
+      // Affiche le texte de Gemini en titres et paragraphes (textContent uniquement, jamais de HTML brut).
+      function renderSummary(text) {
+        summaryOutput.innerHTML = "";
+
+        text
+          .replace(/\r\n/g, "\n")
+          .split(/\n\s*\n/)
+          .forEach((block) => {
+            const lines = block
+              .split("\n")
+              .map((line) => line.replace(/\*\*/g, "").replace(/^#+\s*/, "").trim())
+              .filter(Boolean);
+            let paragraphLines = [];
+
+            const flush = () => {
+              if (paragraphLines.length) {
+                summaryOutput.appendChild(buildParagraph(paragraphLines));
+                paragraphLines = [];
+              }
+            };
+
+            lines.forEach((line) => {
+              if (isSectionHeading(line)) {
+                flush();
+                const heading = document.createElement("h2");
+                heading.className = "summary-heading";
+                heading.textContent = line;
+                summaryOutput.appendChild(heading);
+              } else {
+                paragraphLines.push(line);
+              }
+            });
+
+            flush();
+          });
       }
 
       function setSummaryEditable(isEditable) {
@@ -996,7 +1112,9 @@
             throw new Error(result.error || "La synthèse n'a pas pu être générée.");
           }
 
-          summaryOutput.textContent = result.summary;
+          renderSummary(result.summary);
+          printTitle.textContent = data.clientName || "Synthèse générale";
+          reportTitle = data.clientName ? `Bilan ${data.clientName}` : "";
           setSummaryEditable(true);
           postGenerateActions.classList.remove("screen-hidden");
           setStatus("La synthèse a été générée. Vous pouvez la modifier puis l'exporter en PDF.", "success");
@@ -1019,11 +1137,27 @@
           return;
         }
 
-        summaryOutput.textContent = editedSummary;
         window.print();
       }
 
       printButton.addEventListener("click", handlePrint);
+
+      // Le titre de la page sert d'en-tête et de nom de fichier proposé pour le PDF.
+      window.addEventListener("beforeprint", () => {
+        if (reportTitle) {
+          document.title = reportTitle;
+        }
+      });
+      window.addEventListener("afterprint", () => {
+        document.title = pageTitle;
+      });
+
+      // Coller du texte sans sa mise en forme d'origine (polices, couleurs, tailles).
+      summaryOutput.addEventListener("paste", (event) => {
+        event.preventDefault();
+        const text = event.clipboardData?.getData("text/plain") || "";
+        document.execCommand("insertText", false, text);
+      });
 
       toggleConditionalSections();
     </script>
