@@ -5,7 +5,7 @@ NUESTRO génère des synthèses client SEO et SEA à partir de rapports PDF / Lo
 
 ## Prérequis
 
-- Node.js 24.x
+- Node.js 24.x, version 24.22.1 ou supérieure (correctifs de sécurité d'octobre 2026)
 - npm 11.x
 - Une clé API Gemini
 
