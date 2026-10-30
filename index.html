@@ -271,6 +271,16 @@
         border: 0;
       }
 
+      .comparison-toggle {
+        margin-top: 14px;
+      }
+
+      .comparison-fields {
+        display: grid;
+        gap: 14px;
+        margin-top: 14px;
+      }
+
       .tag-list {
         display: flex;
         flex-wrap: wrap;
@@ -711,12 +721,30 @@
 
             <section class="section-block">
               <h3>2. Pièces jointes</h3>
-              <p>Le rapport principal est obligatoire.</p>
+              <p>Le rapport principal est obligatoire. La comparaison avec une autre période est facultative.</p>
               <div class="dropzone">
                   <label for="main-report">Rapport Looker Studio / PDF principal</label>
                   <input id="main-report" name="mainReport" type="file" accept=".pdf,.csv,.txt" multiple required />
                   <span class="file-note">Ajoutez un ou plusieurs documents de référence (PDF, CSV ou TXT, 5 fichiers maximum, 20 Mo par fichier).</span>
                   <div class="tag-list" id="main-report-tags"></div>
+              </div>
+              <div class="comparison-toggle">
+                <button id="comparison-toggle" class="secondary-btn" type="button" aria-expanded="false" aria-controls="comparison-fields">Comparer deux périodes</button>
+              </div>
+              <div id="comparison-fields" class="comparison-fields hidden">
+                <div class="field">
+                  <label for="comparison-start-date">Période de comparaison</label>
+                  <div class="grid two">
+                    <input id="comparison-start-date" name="comparisonStartDate" type="date" aria-label="Date de début de la période de comparaison" />
+                    <input id="comparison-end-date" name="comparisonEndDate" type="date" aria-label="Date de fin de la période de comparaison" />
+                  </div>
+                </div>
+                <div class="dropzone">
+                  <label for="comparison-report">Rapport de la période de comparaison</label>
+                  <input id="comparison-report" name="comparisonReport" type="file" accept=".pdf,.csv,.txt" multiple />
+                  <span class="file-note">Le rapport de l'autre période (PDF, CSV ou TXT, 5 fichiers maximum, 20 Mo par fichier).</span>
+                  <div class="tag-list" id="comparison-report-tags"></div>
+                </div>
               </div>
             </section>
 
@@ -813,6 +841,12 @@
       const printButton = document.getElementById("print-summary");
       const postGenerateActions = document.getElementById("post-generate-actions");
       const summaryEditNote = document.getElementById("summary-edit-note");
+      const comparisonToggle = document.getElementById("comparison-toggle");
+      const comparisonFields = document.getElementById("comparison-fields");
+      const comparisonStartDate = document.getElementById("comparison-start-date");
+      const comparisonEndDate = document.getElementById("comparison-end-date");
+      const comparisonReport = document.getElementById("comparison-report");
+      const comparisonReportTags = document.getElementById("comparison-report-tags");
       const printTitle = document.getElementById("print-title");
       const pageTitle = document.title;
       let reportTitle = "";
@@ -995,9 +1029,26 @@
           .map((input) => input.value);
       }
 
+      // Afficher la comparaison, ou la retirer en vidant ses champs.
+      function toggleComparison() {
+        const willOpen = comparisonFields.classList.contains("hidden");
+        comparisonFields.classList.toggle("hidden", !willOpen);
+        comparisonToggle.textContent = willOpen ? "Retirer la comparaison" : "Comparer deux périodes";
+        comparisonToggle.setAttribute("aria-expanded", String(willOpen));
+
+        if (!willOpen) {
+          comparisonStartDate.value = "";
+          comparisonEndDate.value = "";
+          comparisonReport.value = "";
+          updateFileTags(comparisonReport, comparisonReportTags);
+        }
+      }
+
       function serializeForm() {
         const startDate = document.getElementById("start-date").value;
         const endDate = document.getElementById("end-date").value;
+        const comparisonStart = comparisonStartDate.value;
+        const comparisonEnd = comparisonEndDate.value;
 
         return {
           clientName: document.getElementById("client-name").value.trim(),
@@ -1010,27 +1061,16 @@
           seoActions: document.getElementById("seo-actions").value.trim(),
           keywordTable: document.getElementById("keyword-table").value.trim(),
           seoComment: document.getElementById("seo-comment").value.trim(),
-          seaComment: document.getElementById("sea-comment").value.trim()
+          seaComment: document.getElementById("sea-comment").value.trim(),
+          comparisonStartDate: comparisonStart,
+          comparisonEndDate: comparisonEnd,
+          comparisonPeriod: comparisonStart && comparisonEnd ? `${comparisonStart} au ${comparisonEnd}` : ""
         };
       }
 
-      function validateForm(data) {
-        if (!data.clientName || !data.startDate || !data.endDate) {
-          return "Merci de renseigner le nom du client et la période analysée.";
-        }
-
-        if (data.endDate < data.startDate) {
-          return "La date de fin doit être postérieure à la date de début.";
-        }
-
-        if (!mainReport.files.length) {
-          return "Merci de joindre le rapport PDF principal avant de poursuivre.";
-        }
-
-        const files = Array.from(mainReport.files);
-
+      function validateFiles(files) {
         if (files.length > maxFileCount) {
-          return "Vous pouvez joindre au maximum 5 fichiers.";
+          return "Vous pouvez joindre au maximum 5 fichiers par période.";
         }
 
         const unsupportedFile = files.find((file) => {
@@ -1049,9 +1089,48 @@
         return "";
       }
 
+      function validateForm(data) {
+        if (!data.clientName || !data.startDate || !data.endDate) {
+          return "Merci de renseigner le nom du client et la période analysée.";
+        }
+
+        if (data.endDate < data.startDate) {
+          return "La date de fin doit être postérieure à la date de début.";
+        }
+
+        if (!mainReport.files.length) {
+          return "Merci de joindre le rapport PDF principal avant de poursuivre.";
+        }
+
+        const mainFilesError = validateFiles(Array.from(mainReport.files));
+
+        if (mainFilesError) {
+          return mainFilesError;
+        }
+
+        // La comparaison est facultative, mais si elle est commencée elle doit être complète.
+        const comparisonFiles = Array.from(comparisonReport.files);
+
+        if (data.comparisonStartDate || data.comparisonEndDate || comparisonFiles.length) {
+          if (!data.comparisonStartDate || !data.comparisonEndDate || !comparisonFiles.length) {
+            return "Pour comparer deux périodes, renseignez les dates de la période de comparaison et joignez son rapport.";
+          }
+
+          if (data.comparisonEndDate < data.comparisonStartDate) {
+            return "La date de fin de la période de comparaison doit être postérieure à sa date de début.";
+          }
+
+          return validateFiles(comparisonFiles);
+        }
+
+        return "";
+      }
+
       seoPack.addEventListener("change", toggleConditionalSections);
       seaPack.addEventListener("change", toggleConditionalSections);
       mainReport.addEventListener("change", () => updateFileTags(mainReport, mainReportTags));
+      comparisonReport.addEventListener("change", () => updateFileTags(comparisonReport, comparisonReportTags));
+      comparisonToggle.addEventListener("click", toggleComparison);
 
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -1094,6 +1173,15 @@
         Array.from(mainReport.files || []).forEach((file) => {
           payload.append("mainReport", file);
         });
+
+        if (comparisonReport.files.length) {
+          payload.append("comparisonStartDate", data.comparisonStartDate);
+          payload.append("comparisonEndDate", data.comparisonEndDate);
+          payload.append("comparisonPeriod", data.comparisonPeriod);
+          Array.from(comparisonReport.files).forEach((file) => {
+            payload.append("comparisonReport", file);
+          });
+        }
 
         setSummaryEditable(false);
         summaryOutput.textContent = retryStatusMessage;

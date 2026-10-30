@@ -43,7 +43,7 @@ app.get(["/", "/index.html"], (req, res) => {
 app.use("/assets", express.static(path.join(__dirname, "assets")));
 app.use(express.json());
 
-function buildPrompt(fields) {
+function buildPrompt(fields, hasComparison = false) {
   const seoActive = Boolean(fields.seoPack);
   const seaActive = Boolean(fields.seaPack);
 
@@ -52,6 +52,7 @@ function buildPrompt(fields) {
   const startDate = fields.startDate?.trim() || "Non renseignée";
   const endDate = fields.endDate?.trim() || "Non renseignée";
   const reportType = fields.reportType?.trim() || "Rapport non renseigné";
+  const comparisonPeriod = fields.comparisonPeriod?.trim() || "Période non renseignée";
 
   // Le vocabulaire du rapport s'adapte au type de rapport (trimestriel ou semestriel).
   const isQuarterly = reportType.toLowerCase() === "trimestriel";
@@ -88,6 +89,29 @@ function buildPrompt(fields) {
       : "";
 
   const conclusionNumber = seaActive ? 10 : 9;
+
+  // Section 5.1 : uniquement lorsqu'un second rapport (période de comparaison) est joint.
+  const reportComparisonSection = `
+5.1 Comparaison entre les deux rapports
+Titre cette section exactement :
+"5.1 Comparaison entre les deux rapports"
+
+Compare la période principale (${analysisPeriod}) avec la période de comparaison (${comparisonPeriod}) à partir des deux rapports joints.
+Commence par une phrase proche de :
+"Par rapport à la période du ... au ..., votre site ..."
+
+Présente ensuite sous forme de puces simples les indicateurs présents dans les deux rapports, par exemple : sessions, utilisateurs, durée moyenne, taux d'engagement, formulaires, appels et autres conversions, impressions SEO, clics organiques, CTR, position moyenne${seaActive ? ", ainsi que, pour le SEA : impressions, clics, coût, conversions et coût par conversion" : ""}.
+Pour chaque indicateur, indique la valeur de la période principale, celle de la période de comparaison et l'évolution (écart et pourcentage arrondi à une décimale).
+Calcule chaque évolution avec soin à partir des valeurs exactes lues dans les rapports. En cas de doute sur un calcul, ou si la valeur de comparaison est nulle, donne uniquement les deux valeurs et l'écart.
+Ne compare que des indicateurs de même nature présents dans les deux rapports : n'invente aucune valeur et ne compare jamais, par exemple, des sessions avec des clics.
+Pour la position moyenne et le coût par conversion, une baisse est une amélioration : formule l'évolution en conséquence.
+Si les deux périodes n'ont pas la même durée, signale-le sobrement et appuie l'analyse sur les ratios (CTR, taux d'engagement, taux de conversion).
+Ne reprends pas le contenu de la section 5.
+
+Ajoute ensuite un bloc :
+➤ Lecture :
+avec 2 à 4 phrases qui résument les principales progressions, les points de vigilance éventuels et ce qu'ils signifient pour le client.
+`;
 
   const seaSection = `
 9. Bilan SEA
@@ -196,13 +220,14 @@ LANGUE DE SORTIE
 - Utilise un français professionnel, naturel et correct, avec tous les accents.
 - N'utilise aucune autre langue dans le rapport final, sauf pour les noms propres, marques, URLs, noms de campagnes, mots-clés ou données provenant directement des documents.
 - Corrige naturellement les formulations lorsque nécessaire, sans modifier le sens des données sources.
+- Adresse-toi toujours au client en le vouvoyant (« vous », « votre site », « vos contacts ») ; ne le tutoie jamais.
 
 CONTEXTE DU DOSSIER
 - Nom du client : ${clientName}
 - Période analysée : ${analysisPeriod}
 - Date de début : ${startDate}
 - Date de fin : ${endDate}
-- Type de rapport : ${reportType}
+${hasComparison ? `- Période de comparaison : ${comparisonPeriod}\n` : ""}- Type de rapport : ${reportType}
 - Pack SEO : ${seoActive ? seoPack : "Non actif"}
 ${seaActive ? `- Pack SEA : ${seaPack}\n` : ""}
 INFORMATIONS FORMULAIRE À UTILISER EN COMPLÉMENT DU PDF
@@ -252,7 +277,9 @@ RÈGLES ABSOLUES
 - N'utilise pas de JSON.
 - N'utilise pas de séparateurs décoratifs du type "---".
 - N'utilise pas de placeholders entre crochets.
-${seaActive ? "" : `- N'écris pas de section SEA : le SEA n'est pas actif.
+${hasComparison ? `- Deux rapports sont joints, chacun précédé de son intitulé : le rapport de la période principale et le rapport de la période de comparaison.
+- Toutes les sections, sauf la section 5.1, reposent uniquement sur le rapport de la période principale.
+- Le rapport de la période de comparaison sert uniquement à la section 5.1 et, brièvement, à la conclusion. Ne mélange jamais les chiffres des deux rapports.\n` : ""}${seaActive ? "" : `- N'écris pas de section SEA : le SEA n'est pas actif.
 - Omets totalement le SEA sans le signaler : aucune phrase sur son absence, aucune mention "non applicable".\n`}- Si une donnée est absente, ambiguë ou illisible, indique-le sobrement sans extrapoler.
 - Si une donnée manque, garde la section mais formule-la de façon sobre et professionnelle.
 - Toutes les sections doivent être générées, même si les données sont absentes.
@@ -302,7 +329,7 @@ Le second doit rappeler qu'il inclut :
 - la visibilité SEO
 - les contenus les plus vus
 - les requêtes stratégiques
-${seaActive ? "- les performances des campagnes Google Ads\n" : ""}- les actions menées dans le cadre ${packContext}
+${seaActive ? "- les performances des campagnes Google Ads\n" : ""}${hasComparison ? "- la comparaison avec une période précédente\n" : ""}- les actions menées dans le cadre ${packContext}
 - des pistes concrètes pour renforcer cette dynamique
 
 2. Dernières actions SEO réalisées
@@ -351,7 +378,7 @@ Sinon, écris exactement :
 "Données non disponibles dans le rapport fourni."
 
 Cette section doit toujours apparaître.
-
+${hasComparison ? reportComparisonSection : ""}
 6. Évolution des mots-clés stratégiques
 Si des mots-clés sont disponibles, commente leur évolution.
 Sinon, écris exactement :
@@ -409,7 +436,7 @@ La conclusion doit :
 - mettre en avant les résultats positifs
 - souligner les avancées
 - valoriser les conversions, l'engagement ou les signaux favorables
-${seaActive ? "- reprendre brièvement les principaux enseignements du bilan SEA\n" : ""}- rappeler les leviers de progression à venir
+${seaActive ? "- reprendre brièvement les principaux enseignements du bilan SEA\n" : ""}${hasComparison ? "- évoquer brièvement les principales évolutions par rapport à la période de comparaison\n" : ""}- rappeler les leviers de progression à venir
 
 Le ton doit être rassurant, positif et professionnel.
 
@@ -533,7 +560,10 @@ function buildFilePart(file) {
 
 // Transforme les erreurs d'upload (taille, nombre de fichiers) en message propre pour l'utilisateur.
 function handleUpload(req, res, next) {
-  upload.array("mainReport", 5)(req, res, (error) => {
+  upload.fields([
+    { name: "mainReport", maxCount: 5 },
+    { name: "comparisonReport", maxCount: 5 }
+  ])(req, res, (error) => {
     if (!error) {
       return next();
     }
@@ -543,7 +573,7 @@ function handleUpload(req, res, next) {
     if (error.code === "LIMIT_FILE_SIZE") {
       message = "Un des fichiers dépasse la taille maximale autorisée (20 Mo).";
     } else if (error.code === "LIMIT_FILE_COUNT" || error.code === "LIMIT_UNEXPECTED_FILE") {
-      message = "Vous pouvez joindre au maximum 5 fichiers.";
+      message = "Vous pouvez joindre au maximum 5 fichiers par période.";
     }
 
     return res.status(400).json({ error: message });
@@ -557,11 +587,15 @@ app.post("/api/generate-summary", handleUpload, async (req, res) => {
       return res.status(500).json({ error: missingApiKeyMessage });
     }
 
-    if (!req.files?.length) {
+    const mainFiles = req.files?.mainReport || [];
+    const comparisonFiles = req.files?.comparisonReport || [];
+    const hasComparison = comparisonFiles.length > 0;
+
+    if (!mainFiles.length) {
       return res.status(400).json({ error: "Le rapport principal est obligatoire." });
     }
 
-    const unsupportedFiles = req.files.filter((file) => !getFileKind(file));
+    const unsupportedFiles = [...mainFiles, ...comparisonFiles].filter((file) => !getFileKind(file));
 
     if (unsupportedFiles.length) {
       const names = unsupportedFiles.map((file) => file.originalname).join(", ");
@@ -570,11 +604,20 @@ app.post("/api/generate-summary", handleUpload, async (req, res) => {
       });
     }
 
-    const prompt = buildPrompt(req.body);
+    const prompt = buildPrompt(req.body, hasComparison);
+    // Avec une comparaison, chaque groupe de documents est précédé de son intitulé.
+    const fileParts = hasComparison
+      ? [
+          { text: `DOCUMENTS DE LA PÉRIODE PRINCIPALE (${req.body.analysisPeriod || "période principale"}) :` },
+          ...mainFiles.map(buildFilePart),
+          { text: `DOCUMENTS DE LA PÉRIODE DE COMPARAISON (${req.body.comparisonPeriod || "période de comparaison"}) :` },
+          ...comparisonFiles.map(buildFilePart)
+        ]
+      : mainFiles.map(buildFilePart);
     const contents = [
       {
         role: "user",
-        parts: [{ text: prompt }, ...req.files.map(buildFilePart)]
+        parts: [{ text: prompt }, ...fileParts]
       }
     ];
 

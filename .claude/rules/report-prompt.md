@@ -20,6 +20,8 @@ Es documentación para desarrolladores: el prompt real enviado a Gemini NO se es
 - Títulos del reporte, bloques `➤ Lecture :`, `➤ Interprétation :`, `➤ Rappel des seuils :`,
   `➤ Actions SEA à venir :` y cualquier texto destinado al cliente: en francés correcto, con acentos.
 - La documentación para desarrolladores (`CLAUDE.md`, `.claude/rules/`) puede quedarse en español.
+- El reporte se dirige al cliente siempre de **« vous »** (nunca « tu »). La interfaz interna
+  (formulario, ventana de espera) puede tutear al usuario.
 
 ## Fuentes de datos
 
@@ -44,6 +46,7 @@ Es documentación para desarrolladores: el prompt real enviado a Gemini NO se es
 3. Bilan global du site
 4. Bilan SEO
 5. Comparaison intersemestre / intertrimestre
+5.1 Comparaison entre les deux rapports — **solo si se adjunta un segundo reporte**
 6. Évolution des mots-clés stratégiques
 7. Pages et audience
 8. Actions SEO à venir
@@ -51,6 +54,21 @@ Es documentación para desarrolladores: el prompt real enviado a Gemini NO se es
 9 o 10. Conclusion — 9 sin SEA, 10 con SEA
 
 Si SEA no está activo: ninguna sección SEA, ninguna frase sobre la ausencia de SEA, ninguna mención "non applicable".
+
+## Sección "5.1 Comparaison entre les deux rapports" (opcional)
+
+- El formulario tiene un botón « Comparer deux périodes » que muestra una segunda periodo
+  (`comparisonStartDate`, `comparisonEndDate`) y un segundo reporte (`comparisonReport`).
+  Opcional; si se empieza, fechas y reporte son obligatorios.
+- El servidor envía a Gemini cada grupo de documentos precedido de su título
+  (« DOCUMENTS DE LA PÉRIODE PRINCIPALE … », « DOCUMENTS DE LA PÉRIODE DE COMPARAISON … »).
+- Todas las secciones salvo la 5.1 usan solo el reporte principal; el de comparación sirve
+  para la 5.1 y, brevemente, la conclusión. Nunca mezclar cifras de los dos reportes.
+- La 5.1 compara solo indicadores de la misma naturaleza presentes en ambos reportes:
+  valor principal, valor de comparación, diferencia y % (1 decimal). Para posición media y
+  coste por conversión, una bajada es una mejora. Si las duraciones difieren, señalarlo.
+- Termina con `➤ Lecture :` (2 a 4 frases).
+- La sección 5 (comparación dentro del reporte principal) se mantiene igual.
 
 ## Sección "9. Bilan SEA" (solo con SEA activo)
 
@@ -81,5 +99,5 @@ Debe ser un análisis real, no un simple resumen de cifras.
 ## Archivos aceptados
 
 - Formatos soportados: PDF (enviado a Gemini como documento), CSV y TXT (enviados como texto).
-- Máximo 5 archivos de 20 MB. Cualquier otro formato se rechaza con un mensaje claro en francés,
+- Máximo 5 archivos de 20 MB por periodo. Cualquier otro formato se rechaza con un mensaje claro en francés,
   tanto en el navegador como en el servidor.
