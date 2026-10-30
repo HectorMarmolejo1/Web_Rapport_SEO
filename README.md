@@ -40,6 +40,7 @@ Le serveur écoute toujours sur `0.0.0.0`, ce qui est requis par Render.
 ## Fonctionnement
 
 - Le frontend envoie le formulaire et le rapport principal au backend.
+- En option, le bouton « Comparer deux périodes » permet de joindre le rapport d'une seconde période : la synthèse ajoute alors une section « 5.1 Comparaison entre les deux rapports ».
 - Les fichiers sont traités en mémoire et ne sont pas enregistrés sur le serveur.
 - Le backend transmet le PDF et les consignes métier au modèle Gemini.
 - En cas d'indisponibilité temporaire de Gemini (503), le backend réessaie automatiquement.

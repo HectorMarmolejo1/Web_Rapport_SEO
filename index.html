@@ -271,6 +271,16 @@
         border: 0;
       }
 
+      .comparison-toggle {
+        margin-top: 14px;
+      }
+
+      .comparison-fields {
+        display: grid;
+        gap: 14px;
+        margin-top: 14px;
+      }
+
       .tag-list {
         display: flex;
         flex-wrap: wrap;
@@ -375,6 +385,20 @@
         line-height: 1.7;
       }
 
+      .summary-box p {
+        margin: 0 0 12px;
+      }
+
+      .summary-box .summary-heading {
+        margin: 22px 0 8px;
+        font-size: 1.15rem;
+        font-weight: 800;
+      }
+
+      .summary-box .summary-heading:first-child {
+        margin-top: 0;
+      }
+
       .summary-box[contenteditable="true"] {
         cursor: text;
       }
@@ -419,6 +443,66 @@
 
       .hidden {
         display: none !important;
+      }
+
+      .generation-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: grid;
+        place-items: center;
+        padding: 16px;
+        background: rgba(30, 36, 72, 0.55);
+        backdrop-filter: blur(4px);
+      }
+
+      .generation-card {
+        width: min(420px, 100%);
+        padding: 32px 28px;
+        border-radius: var(--radius-xl);
+        background: var(--surface-strong);
+        box-shadow: var(--shadow);
+        text-align: center;
+      }
+
+      .generation-spinner {
+        width: 48px;
+        height: 48px;
+        margin: 0 auto 18px;
+        border-radius: 50%;
+        border: 4px solid var(--brand-soft);
+        border-top-color: var(--brand);
+        animation: generation-spin 0.9s linear infinite;
+      }
+
+      .generation-title {
+        margin: 0 0 8px;
+        font-size: 1.25rem;
+        font-weight: 800;
+      }
+
+      .generation-message {
+        margin: 0;
+        min-height: 1.5em;
+        color: var(--muted);
+      }
+
+      .generation-hint {
+        margin: 14px 0 0;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      @keyframes generation-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .generation-spinner {
+          animation-duration: 3s;
+        }
       }
 
       .site-footer {
@@ -477,14 +561,21 @@
         }
       }
 
+      @page {
+        size: A4;
+        margin: 14mm 15mm 16mm;
+      }
+
       @media print {
         body {
+          min-height: 0;
           background: #fff;
         }
 
         .hero-card,
         .panel,
         .site-footer,
+        .generation-overlay,
         .status-banner,
         .print-trigger,
         .summary-edit-note,
@@ -500,15 +591,34 @@
         }
 
         .output-panel,
-        .summary-box {
+        .summary-box,
+        .summary-box[contenteditable="true"]:focus {
           border: 0;
           padding: 0;
           background: #fff;
+          box-shadow: none;
         }
 
         .summary-box {
           min-height: auto;
           white-space: pre-wrap;
+          font-family: "Helvetica Neue", Arial, sans-serif;
+          font-size: 10pt;
+          line-height: 1.45;
+          color: #1f2552;
+        }
+
+        .summary-box p {
+          margin: 0 0 6pt;
+          orphans: 3;
+          widows: 3;
+        }
+
+        .summary-box .summary-heading {
+          margin: 12pt 0 4pt;
+          font-size: 12pt;
+          break-after: avoid;
+          page-break-after: avoid;
         }
 
         .output-header p {
@@ -517,10 +627,13 @@
 
         .print-only {
           display: block;
-          margin: 0 0 20px;
-          font-size: 1.9rem;
+          margin: 0 0 10pt;
+          font-family: "Helvetica Neue", Arial, sans-serif;
+          max-width: none;
+          font-size: 18pt;
+          line-height: 1.2;
           font-weight: 800;
-          color: #111;
+          color: #1f2552;
         }
 
         .output-panel {
@@ -608,12 +721,30 @@
 
             <section class="section-block">
               <h3>2. Pièces jointes</h3>
-              <p>Le rapport principal est obligatoire.</p>
+              <p>Le rapport principal est obligatoire. La comparaison avec une autre période est facultative.</p>
               <div class="dropzone">
                   <label for="main-report">Rapport Looker Studio / PDF principal</label>
                   <input id="main-report" name="mainReport" type="file" accept=".pdf,.csv,.txt" multiple required />
                   <span class="file-note">Ajoutez un ou plusieurs documents de référence (PDF, CSV ou TXT, 5 fichiers maximum, 20 Mo par fichier).</span>
                   <div class="tag-list" id="main-report-tags"></div>
+              </div>
+              <div class="comparison-toggle">
+                <button id="comparison-toggle" class="secondary-btn" type="button" aria-expanded="false" aria-controls="comparison-fields">Comparer deux périodes</button>
+              </div>
+              <div id="comparison-fields" class="comparison-fields hidden">
+                <div class="field">
+                  <label for="comparison-start-date">Période de comparaison</label>
+                  <div class="grid two">
+                    <input id="comparison-start-date" name="comparisonStartDate" type="date" aria-label="Date de début de la période de comparaison" />
+                    <input id="comparison-end-date" name="comparisonEndDate" type="date" aria-label="Date de fin de la période de comparaison" />
+                  </div>
+                </div>
+                <div class="dropzone">
+                  <label for="comparison-report">Rapport de la période de comparaison</label>
+                  <input id="comparison-report" name="comparisonReport" type="file" accept=".pdf,.csv,.txt" multiple />
+                  <span class="file-note">Le rapport de l'autre période (PDF, CSV ou TXT, 5 fichiers maximum, 20 Mo par fichier).</span>
+                  <div class="tag-list" id="comparison-report-tags"></div>
+                </div>
               </div>
             </section>
 
@@ -669,14 +800,16 @@
               <p>L’aperçu s’actualise après génération du formulaire.</p>
             </div>
           </div>
-          <h3 class="print-only">Synthèse générale</h3>
+          <h1 id="print-title" class="print-only">Synthèse générale</h1>
           <div id="summary-output" class="summary-box" contenteditable="false" aria-readonly="true" aria-label="Synthèse générée">
             <span class="summary-placeholder">
               La synthèse apparaîtra ici après génération du formulaire.
             </span>
           </div>
           <p id="summary-edit-note" class="summary-edit-note screen-hidden">
-            Vous pouvez modifier manuellement le texte avant l’export PDF.
+            Vous pouvez modifier manuellement le texte avant l’export PDF. Pour un PDF sans
+            l’adresse du site en bas de page, décochez « En-têtes et pieds de page » dans la
+            fenêtre d’impression.
           </p>
           <div id="post-generate-actions" class="actions screen-hidden">
             <button class="ghost-btn print-trigger" type="button" id="print-summary">Exporter en PDF</button>
@@ -685,6 +818,15 @@
       </div>
       <footer class="site-footer">NUESTRO</footer>
     </main>
+
+    <div id="generation-overlay" class="generation-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="generation-title">
+      <div class="generation-card">
+        <div class="generation-spinner" aria-hidden="true"></div>
+        <p id="generation-title" class="generation-title">Génération en cours</p>
+        <p id="generation-message" class="generation-message" aria-live="polite"></p>
+        <p class="generation-hint">Cela peut prendre jusqu'à une minute.</p>
+      </div>
+    </div>
 
     <script>
       const form = document.getElementById("report-form");
@@ -699,6 +841,27 @@
       const printButton = document.getElementById("print-summary");
       const postGenerateActions = document.getElementById("post-generate-actions");
       const summaryEditNote = document.getElementById("summary-edit-note");
+      const comparisonToggle = document.getElementById("comparison-toggle");
+      const comparisonFields = document.getElementById("comparison-fields");
+      const comparisonStartDate = document.getElementById("comparison-start-date");
+      const comparisonEndDate = document.getElementById("comparison-end-date");
+      const comparisonReport = document.getElementById("comparison-report");
+      const comparisonReportTags = document.getElementById("comparison-report-tags");
+      const printTitle = document.getElementById("print-title");
+      const pageTitle = document.title;
+      let reportTitle = "";
+      const generationOverlay = document.getElementById("generation-overlay");
+      const generationMessage = document.getElementById("generation-message");
+      const submitButton = form.querySelector('button[type="submit"]');
+      // Messages de la fenêtre d'attente (usage interne : tutoiement).
+      const generationMessages = [
+        "Nous préparons ton rapport…",
+        "Analyse de tes documents en cours…",
+        "Rédaction de la synthèse…",
+        "Vérification des chiffres…",
+        "C'est presque prêt…"
+      ];
+      let generationTimer = null;
       const retryStatusMessage =
         "Analyse du rapport en cours... Le modèle est momentanément sollicité, nouvelle tentative automatique.";
 
@@ -734,6 +897,94 @@
       function clearStatus() {
         statusBanner.textContent = "";
         statusBanner.className = "status-banner";
+      }
+
+      function showGenerationOverlay() {
+        let index = 0;
+        generationMessage.textContent = generationMessages[index];
+        generationOverlay.classList.remove("hidden");
+        submitButton.disabled = true;
+
+        // Le dernier message reste affiché jusqu'à la fin de la génération.
+        generationTimer = setInterval(() => {
+          index = Math.min(index + 1, generationMessages.length - 1);
+          generationMessage.textContent = generationMessages[index];
+        }, 4000);
+      }
+
+      function hideGenerationOverlay() {
+        clearInterval(generationTimer);
+        generationOverlay.classList.add("hidden");
+        submitButton.disabled = false;
+      }
+
+      // Titres de section : "3. Bilan", "5.1 Comparaison", éventuellement précédés d'un emoji.
+      function isSectionHeading(line) {
+        return (
+          line.length <= 90 &&
+          !/[.:;]$/.test(line) &&
+          /^(?:[\p{Extended_Pictographic}\uFE0F\u200D]+\s*)?\d{1,2}(?:\.\d{1,2}\.?|\.)\s+\p{L}/u.test(line)
+        );
+      }
+
+      function buildParagraph(lines) {
+        const paragraph = document.createElement("p");
+
+        lines.forEach((line, index) => {
+          if (index > 0) {
+            paragraph.appendChild(document.createTextNode("\n"));
+          }
+
+          // Met en gras le libellé des blocs "➤ Lecture :", "➤ Interprétation :", etc.
+          const label = line.match(/^(➤\s*[^:]{1,40}:)(.*)$/);
+
+          if (label) {
+            const strong = document.createElement("strong");
+            strong.textContent = label[1];
+            paragraph.append(strong, label[2]);
+          } else {
+            paragraph.appendChild(document.createTextNode(line));
+          }
+        });
+
+        return paragraph;
+      }
+
+      // Affiche le texte de Gemini en titres et paragraphes (textContent uniquement, jamais de HTML brut).
+      function renderSummary(text) {
+        summaryOutput.innerHTML = "";
+
+        text
+          .replace(/\r\n/g, "\n")
+          .split(/\n\s*\n/)
+          .forEach((block) => {
+            const lines = block
+              .split("\n")
+              .map((line) => line.replace(/\*\*/g, "").replace(/^#+\s*/, "").trim())
+              .filter(Boolean);
+            let paragraphLines = [];
+
+            const flush = () => {
+              if (paragraphLines.length) {
+                summaryOutput.appendChild(buildParagraph(paragraphLines));
+                paragraphLines = [];
+              }
+            };
+
+            lines.forEach((line) => {
+              if (isSectionHeading(line)) {
+                flush();
+                const heading = document.createElement("h2");
+                heading.className = "summary-heading";
+                heading.textContent = line;
+                summaryOutput.appendChild(heading);
+              } else {
+                paragraphLines.push(line);
+              }
+            });
+
+            flush();
+          });
       }
 
       function setSummaryEditable(isEditable) {
@@ -778,9 +1029,26 @@
           .map((input) => input.value);
       }
 
+      // Afficher la comparaison, ou la retirer en vidant ses champs.
+      function toggleComparison() {
+        const willOpen = comparisonFields.classList.contains("hidden");
+        comparisonFields.classList.toggle("hidden", !willOpen);
+        comparisonToggle.textContent = willOpen ? "Retirer la comparaison" : "Comparer deux périodes";
+        comparisonToggle.setAttribute("aria-expanded", String(willOpen));
+
+        if (!willOpen) {
+          comparisonStartDate.value = "";
+          comparisonEndDate.value = "";
+          comparisonReport.value = "";
+          updateFileTags(comparisonReport, comparisonReportTags);
+        }
+      }
+
       function serializeForm() {
         const startDate = document.getElementById("start-date").value;
         const endDate = document.getElementById("end-date").value;
+        const comparisonStart = comparisonStartDate.value;
+        const comparisonEnd = comparisonEndDate.value;
 
         return {
           clientName: document.getElementById("client-name").value.trim(),
@@ -793,27 +1061,16 @@
           seoActions: document.getElementById("seo-actions").value.trim(),
           keywordTable: document.getElementById("keyword-table").value.trim(),
           seoComment: document.getElementById("seo-comment").value.trim(),
-          seaComment: document.getElementById("sea-comment").value.trim()
+          seaComment: document.getElementById("sea-comment").value.trim(),
+          comparisonStartDate: comparisonStart,
+          comparisonEndDate: comparisonEnd,
+          comparisonPeriod: comparisonStart && comparisonEnd ? `${comparisonStart} au ${comparisonEnd}` : ""
         };
       }
 
-      function validateForm(data) {
-        if (!data.clientName || !data.startDate || !data.endDate) {
-          return "Merci de renseigner le nom du client et la période analysée.";
-        }
-
-        if (data.endDate < data.startDate) {
-          return "La date de fin doit être postérieure à la date de début.";
-        }
-
-        if (!mainReport.files.length) {
-          return "Merci de joindre le rapport PDF principal avant de poursuivre.";
-        }
-
-        const files = Array.from(mainReport.files);
-
+      function validateFiles(files) {
         if (files.length > maxFileCount) {
-          return "Vous pouvez joindre au maximum 5 fichiers.";
+          return "Vous pouvez joindre au maximum 5 fichiers par période.";
         }
 
         const unsupportedFile = files.find((file) => {
@@ -832,9 +1089,48 @@
         return "";
       }
 
+      function validateForm(data) {
+        if (!data.clientName || !data.startDate || !data.endDate) {
+          return "Merci de renseigner le nom du client et la période analysée.";
+        }
+
+        if (data.endDate < data.startDate) {
+          return "La date de fin doit être postérieure à la date de début.";
+        }
+
+        if (!mainReport.files.length) {
+          return "Merci de joindre le rapport PDF principal avant de poursuivre.";
+        }
+
+        const mainFilesError = validateFiles(Array.from(mainReport.files));
+
+        if (mainFilesError) {
+          return mainFilesError;
+        }
+
+        // La comparaison est facultative, mais si elle est commencée elle doit être complète.
+        const comparisonFiles = Array.from(comparisonReport.files);
+
+        if (data.comparisonStartDate || data.comparisonEndDate || comparisonFiles.length) {
+          if (!data.comparisonStartDate || !data.comparisonEndDate || !comparisonFiles.length) {
+            return "Pour comparer deux périodes, renseignez les dates de la période de comparaison et joignez son rapport.";
+          }
+
+          if (data.comparisonEndDate < data.comparisonStartDate) {
+            return "La date de fin de la période de comparaison doit être postérieure à sa date de début.";
+          }
+
+          return validateFiles(comparisonFiles);
+        }
+
+        return "";
+      }
+
       seoPack.addEventListener("change", toggleConditionalSections);
       seaPack.addEventListener("change", toggleConditionalSections);
       mainReport.addEventListener("change", () => updateFileTags(mainReport, mainReportTags));
+      comparisonReport.addEventListener("change", () => updateFileTags(comparisonReport, comparisonReportTags));
+      comparisonToggle.addEventListener("click", toggleComparison);
 
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -878,9 +1174,19 @@
           payload.append("mainReport", file);
         });
 
+        if (comparisonReport.files.length) {
+          payload.append("comparisonStartDate", data.comparisonStartDate);
+          payload.append("comparisonEndDate", data.comparisonEndDate);
+          payload.append("comparisonPeriod", data.comparisonPeriod);
+          Array.from(comparisonReport.files).forEach((file) => {
+            payload.append("comparisonReport", file);
+          });
+        }
+
         setSummaryEditable(false);
         summaryOutput.textContent = retryStatusMessage;
         setStatus(retryStatusMessage, "loading");
+        showGenerationOverlay();
 
         try {
           const response = await fetch("/api/generate-summary", {
@@ -894,7 +1200,9 @@
             throw new Error(result.error || "La synthèse n'a pas pu être générée.");
           }
 
-          summaryOutput.textContent = result.summary;
+          renderSummary(result.summary);
+          printTitle.textContent = data.clientName || "Synthèse générale";
+          reportTitle = data.clientName ? `Bilan ${data.clientName}` : "";
           setSummaryEditable(true);
           postGenerateActions.classList.remove("screen-hidden");
           setStatus("La synthèse a été générée. Vous pouvez la modifier puis l'exporter en PDF.", "success");
@@ -904,6 +1212,8 @@
           );
           postGenerateActions.classList.add("screen-hidden");
           setStatus(error.message, "error");
+        } finally {
+          hideGenerationOverlay();
         }
       });
 
@@ -915,11 +1225,27 @@
           return;
         }
 
-        summaryOutput.textContent = editedSummary;
         window.print();
       }
 
       printButton.addEventListener("click", handlePrint);
+
+      // Le titre de la page sert d'en-tête et de nom de fichier proposé pour le PDF.
+      window.addEventListener("beforeprint", () => {
+        if (reportTitle) {
+          document.title = reportTitle;
+        }
+      });
+      window.addEventListener("afterprint", () => {
+        document.title = pageTitle;
+      });
+
+      // Coller du texte sans sa mise en forme d'origine (polices, couleurs, tailles).
+      summaryOutput.addEventListener("paste", (event) => {
+        event.preventDefault();
+        const text = event.clipboardData?.getData("text/plain") || "";
+        document.execCommand("insertText", false, text);
+      });
 
       toggleConditionalSections();
     </script>
