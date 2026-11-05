@@ -773,7 +773,7 @@
               </div>
               <div class="field">
                 <label for="seo-comment">Commentaire personnel SEO (facultatif)</label>
-                <textarea id="seo-comment" name="seoComment" placeholder="Ajoutez un commentaire du chef de projet si nécessaire."></textarea>
+                <textarea id="seo-comment" name="seoComment" placeholder="Ajoute un commentaire du chef de projet si nécessaire."></textarea>
               </div>
             </section>
 
@@ -794,7 +794,7 @@
               </fieldset>
               <div class="field">
                 <label for="sea-comment">Commentaire personnel SEA (facultatif)</label>
-                <textarea id="sea-comment" name="seaComment" placeholder="Ajoutez un commentaire du chef de projet si nécessaire."></textarea>
+                <textarea id="sea-comment" name="seaComment" placeholder="Ajoute un commentaire du chef de projet si nécessaire."></textarea>
               </div>
             </section>
 
@@ -876,6 +876,8 @@
         "C'est presque prêt…"
       ];
       let generationTimer = null;
+      // Vrai dès qu'il y a une saisie ou une synthèse non exportée en PDF.
+      let hasUnsavedWork = false;
       const retryStatusMessage =
         "Analyse du rapport en cours... Le modèle est momentanément sollicité, nouvelle tentative automatique.";
 
@@ -1029,7 +1031,7 @@
         } catch (error) {
           if (rawText.includes("<!DOCTYPE html") || rawText.includes("<html")) {
             throw new Error(
-              "La page semble être ouverte hors du serveur Node.js. Lancez l'application avec npm start puis ouvrez http://localhost:3000."
+              "La page semble être ouverte hors du serveur Node.js. Lance l'application avec npm start puis ouvre http://localhost:3000."
             );
           }
 
@@ -1084,7 +1086,7 @@
 
       function validateFiles(files) {
         if (files.length > maxFileCount) {
-          return "Vous pouvez joindre au maximum 5 fichiers par période.";
+          return "Tu peux joindre au maximum 5 fichiers par période.";
         }
 
         const unsupportedFile = files.find((file) => {
@@ -1139,7 +1141,7 @@
 
         if (data.comparisonStartDate || data.comparisonEndDate || comparisonFiles.length) {
           if (!data.comparisonStartDate || !data.comparisonEndDate || !comparisonFiles.length) {
-            return "Pour comparer deux périodes, renseignez les dates de la période de comparaison et joignez son rapport.";
+            return "Pour comparer deux périodes, renseigne les dates de la période de comparaison et joins son rapport.";
           }
 
           if (data.comparisonEndDate < data.comparisonStartDate) {
@@ -1166,7 +1168,7 @@
 
         if (window.location.protocol === "file:") {
           setStatus(
-            "Cette page doit être lancée via le serveur Node.js. Utilisez npm start puis ouvrez http://localhost:3000.",
+            "Cette page doit être lancée via le serveur Node.js. Utilise npm start puis ouvre http://localhost:3000.",
             "error"
           );
           return;
@@ -1233,14 +1235,15 @@
           }
 
           renderSummary(result.summary);
+          hasUnsavedWork = true;
           printTitle.textContent = data.clientName || "Synthèse générale";
           reportTitle = data.clientName ? `Bilan ${data.clientName}` : "";
           setSummaryEditable(true);
           postGenerateActions.classList.remove("screen-hidden");
-          setStatus("La synthèse a été générée. Vous pouvez la modifier puis l'exporter en PDF.", "success");
+          setStatus("La synthèse a été générée. Tu peux la modifier puis l'exporter en PDF.", "success");
         } catch (error) {
           showSummaryPlaceholder(
-            "La synthèse n'a pas pu être générée. Vérifiez la configuration API puis réessayez."
+            "La synthèse n'a pas pu être générée. Vérifie la configuration API puis réessaie."
           );
           postGenerateActions.classList.add("screen-hidden");
           setStatus(error.message, "error");
@@ -1253,7 +1256,7 @@
         const editedSummary = summaryOutput.innerText.trim();
 
         if (editedSummary === "" || summaryOutput.querySelector(".summary-placeholder")) {
-          setStatus("Générez d'abord une synthèse avant de lancer l'export PDF.", "error");
+          setStatus("Génère d'abord une synthèse avant de lancer l'export PDF.", "error");
           return;
         }
 
@@ -1270,6 +1273,25 @@
       });
       window.addEventListener("afterprint", () => {
         document.title = pageTitle;
+        hasUnsavedWork = false;
+      });
+
+      form.addEventListener("input", () => {
+        hasUnsavedWork = true;
+      });
+      form.addEventListener("change", () => {
+        hasUnsavedWork = true;
+      });
+      summaryOutput.addEventListener("input", () => {
+        hasUnsavedWork = true;
+      });
+
+      // Avertit avant de recharger ou de quitter la page (le navigateur affiche son propre message).
+      window.addEventListener("beforeunload", (event) => {
+        if (hasUnsavedWork) {
+          event.preventDefault();
+          event.returnValue = "";
+        }
       });
 
       // Coller du texte sans sa mise en forme d'origine (polices, couleurs, tailles).

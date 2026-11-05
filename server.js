@@ -594,8 +594,13 @@ function handleUpload(req, res, next) {
 
     if (error.code === "LIMIT_FILE_SIZE") {
       message = "Un des fichiers dépasse la taille maximale autorisée (20 Mo).";
-    } else if (error.code === "LIMIT_FILE_COUNT" || error.code === "LIMIT_UNEXPECTED_FILE") {
-      message = "Vous pouvez joindre au maximum 5 fichiers par période.";
+    } else if (error.code === "LIMIT_UNEXPECTED_FILE" && error.field === "keywordReport") {
+      message = "Tu ne peux joindre qu'un seul export des mots-clés.";
+    } else if (error.code === "LIMIT_UNEXPECTED_FILE" && ["mainReport", "comparisonReport"].includes(error.field)) {
+      message = "Tu peux joindre au maximum 5 fichiers par période.";
+    } else if (error.code === "LIMIT_UNEXPECTED_FILE") {
+      // Champ inconnu du serveur : en général une page plus récente que le serveur qui tourne.
+      message = "Le serveur ne reconnaît pas un des fichiers envoyés. Recharge la page puis réessaie.";
     }
 
     return res.status(400).json({ error: message });
