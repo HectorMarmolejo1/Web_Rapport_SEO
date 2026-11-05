@@ -106,7 +106,7 @@ Calcule chaque évolution avec soin à partir des valeurs exactes lues dans les 
 Ne compare que des indicateurs de même nature présents dans les deux rapports : n'invente aucune valeur et ne compare jamais, par exemple, des sessions avec des clics.
 Pour la position moyenne et le coût par conversion, une baisse est une amélioration : formule l'évolution en conséquence.
 Si les deux périodes n'ont pas la même durée, signale-le sobrement et appuie l'analyse sur les ratios (CTR, taux d'engagement, taux de conversion).
-Ne reprends pas le contenu de la section 5.
+Les sections 5 et 5.1 sont toutes les deux obligatoires et complètes : la section 5 présente les évolutions déjà intégrées au rapport de la période principale, la section 5.1 compare les deux rapports joints. Il est normal que certaines informations se recoupent.
 
 Ajoute ensuite un bloc :
 ➤ Lecture :
@@ -278,7 +278,7 @@ RÈGLES ABSOLUES
 - N'utilise pas de séparateurs décoratifs du type "---".
 - N'utilise pas de placeholders entre crochets.
 ${hasComparison ? `- Deux rapports sont joints, chacun précédé de son intitulé : le rapport de la période principale et le rapport de la période de comparaison.
-- Toutes les sections, sauf la section 5.1, reposent uniquement sur le rapport de la période principale.
+- Toutes les sections, sauf la section 5.1, reposent uniquement sur le rapport de la période principale. La section 5 reste donc rédigée exactement comme s'il n'y avait qu'un seul rapport.
 - Le rapport de la période de comparaison sert uniquement à la section 5.1 et, brièvement, à la conclusion. Ne mélange jamais les chiffres des deux rapports.\n` : ""}${seaActive ? "" : `- N'écris pas de section SEA : le SEA n'est pas actif.
 - Omets totalement le SEA sans le signaler : aucune phrase sur son absence, aucune mention "non applicable".\n`}- Si une donnée est absente, ambiguë ou illisible, indique-le sobrement sans extrapoler.
 - Si une donnée manque, garde la section mais formule-la de façon sobre et professionnelle.
@@ -378,7 +378,9 @@ Sinon, écris exactement :
 "Données non disponibles dans le rapport fourni."
 
 Cette section doit toujours apparaître.
-${hasComparison ? reportComparisonSection : ""}
+${hasComparison ? `
+Un second rapport est joint pour la section 5.1, mais la section 5 ne change pas : elle s'appuie sur les comparaisons déjà présentes dans le rapport de la période principale (par exemple les évolutions ou les valeurs de la période précédente affichées dans ce rapport). Rédige-la complètement, comme s'il n'y avait qu'un seul rapport. N'écris "Données non disponibles dans le rapport fourni." que si le rapport de la période principale ne contient réellement aucune comparaison.
+${reportComparisonSection}` : ""}
 6. Évolution des mots-clés stratégiques
 Si des mots-clés sont disponibles, commente leur évolution.
 Sinon, écris exactement :

@@ -68,7 +68,10 @@ Si SEA no está activo: ninguna sección SEA, ninguna frase sobre la ausencia de
   valor principal, valor de comparación, diferencia y % (1 decimal). Para posición media y
   coste por conversión, una bajada es una mejora. Si las duraciones difieren, señalarlo.
 - Termina con `➤ Lecture :` (2 a 4 frases).
-- La sección 5 (comparación dentro del reporte principal) se mantiene igual.
+- La sección 5 (comparación dentro del reporte principal) se mantiene igual y **siempre completa**,
+  también con un segundo reporte: usa las evoluciones ya presentes en el reporte principal y solo
+  escribe « Données non disponibles… » si ese reporte no trae ninguna comparación. Las secciones
+  5 y 5.1 son obligatorias; es normal que se solapen.
 
 ## Sección "9. Bilan SEA" (solo con SEA activo)
 
