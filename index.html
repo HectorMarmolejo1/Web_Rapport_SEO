@@ -271,6 +271,10 @@
         border: 0;
       }
 
+      .keyword-file-field {
+        margin: 14px 0;
+      }
+
       .comparison-toggle {
         margin-top: 14px;
       }
@@ -759,6 +763,14 @@
                 <div class="inline-note">Tu peux laisser ce champ vide si le rapport ou le CDP ne fournit pas de suivi mots-clés.</div>
                 <textarea id="keyword-table" name="keywordTable" placeholder="Une ligne par mot-clé, au format : mot-clé | clics récents | clics précédents | position récente | position précédente | évolution"></textarea>
               </div>
+              <div class="field keyword-file-field">
+                <div class="dropzone">
+                  <label for="keyword-file">Export Search Console des requêtes (facultatif)</label>
+                  <input id="keyword-file" name="keywordReport" type="file" accept=".csv" />
+                  <span class="file-note">Fichier « Requêtes.csv » de l'export Search Console (double-clique sur le .zip pour l'extraire). CSV uniquement.</span>
+                  <div class="tag-list" id="keyword-file-tags"></div>
+                </div>
+              </div>
               <div class="field">
                 <label for="seo-comment">Commentaire personnel SEO (facultatif)</label>
                 <textarea id="seo-comment" name="seoComment" placeholder="Ajoutez un commentaire du chef de projet si nécessaire."></textarea>
@@ -847,6 +859,8 @@
       const comparisonEndDate = document.getElementById("comparison-end-date");
       const comparisonReport = document.getElementById("comparison-report");
       const comparisonReportTags = document.getElementById("comparison-report-tags");
+      const keywordFile = document.getElementById("keyword-file");
+      const keywordFileTags = document.getElementById("keyword-file-tags");
       const printTitle = document.getElementById("print-title");
       const pageTitle = document.title;
       let reportTitle = "";
@@ -1108,6 +1122,18 @@
           return mainFilesError;
         }
 
+        const keywordExport = keywordFile.files[0];
+
+        if (data.seoPack && keywordExport) {
+          if (!keywordExport.name.toLowerCase().endsWith(".csv")) {
+            return "L'export des mots-clés doit être un fichier CSV (par exemple « Requêtes.csv »).";
+          }
+
+          if (keywordExport.size > maxFileSize) {
+            return "Un des fichiers dépasse la taille maximale autorisée (20 Mo).";
+          }
+        }
+
         // La comparaison est facultative, mais si elle est commencée elle doit être complète.
         const comparisonFiles = Array.from(comparisonReport.files);
 
@@ -1130,6 +1156,7 @@
       seaPack.addEventListener("change", toggleConditionalSections);
       mainReport.addEventListener("change", () => updateFileTags(mainReport, mainReportTags));
       comparisonReport.addEventListener("change", () => updateFileTags(comparisonReport, comparisonReportTags));
+      keywordFile.addEventListener("change", () => updateFileTags(keywordFile, keywordFileTags));
       comparisonToggle.addEventListener("click", toggleComparison);
 
       form.addEventListener("submit", async (event) => {
@@ -1173,6 +1200,11 @@
         Array.from(mainReport.files || []).forEach((file) => {
           payload.append("mainReport", file);
         });
+
+        // L'export des mots-clés n'est envoyé que si le bloc SEO est actif.
+        if (data.seoPack && keywordFile.files.length) {
+          payload.append("keywordReport", keywordFile.files[0]);
+        }
 
         if (comparisonReport.files.length) {
           payload.append("comparisonStartDate", data.comparisonStartDate);

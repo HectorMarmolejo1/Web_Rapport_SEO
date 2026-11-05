@@ -73,6 +73,18 @@ Si SEA no está activo: ninguna sección SEA, ninguna frase sobre la ausencia de
   escribe « Données non disponibles… » si ese reporte no trae ninguna comparación. Las secciones
   5 y 5.1 son obligatorias; es normal que se solapen.
 
+## Sección "6. Évolution des mots-clés stratégiques"
+
+- Palabras clave de marca (nombre de la agencia y sus variantes: abreviaturas, errores, nombre + ciudad,
+  nombre de una persona de la agencia): se agrupan y se comentan **una sola vez**, en una frase.
+- El análisis se centra en las palabras clave sin marca (oficio, tipo de bien o servicio, ciudad).
+- Palabras casi idénticas (plural, acentos, guion) se agrupan.
+- Export Search Console opcional (`keywordReport`, un CSV, por ejemplo « Requêtes.csv »): se envía como
+  texto con el título « EXPORT DES MOTS-CLÉS (SEARCH CONSOLE) » y pasa a ser la fuente principal de la
+  sección 6 (5 a 8 consultas útiles sin marca, con clics, impresiones y posición; oportunidades = muchas
+  impresiones y posición > 10). No deducir evoluciones si el archivo solo tiene un periodo.
+  Solo se envía si el bloque SEO está activo. XLSX no se acepta (Gemini no lo lee directamente).
+
 ## Sección "9. Bilan SEA" (solo con SEA activo)
 
 Debe ser un análisis real, no un simple resumen de cifras.
@@ -98,6 +110,14 @@ Debe ser un análisis real, no un simple resumen de cifras.
 
 - Son acciones que realiza **nuestro equipo**, nunca recomendaciones al cliente.
 - Prohibido: "vous devriez", "nous vous recommandons de", "il est recommandé de" o equivalentes.
+
+## Perímetro de nuestro equipo (sección 8)
+
+- Nuestro equipo **no** trabaja en los anuncios ni en las fichas de los bienes inmobiliarios: los gestiona
+  el cliente. Nunca proponer acciones sobre ellos.
+- Sí se puede proponer optimizar las páginas de servicios (estimación, venta, compra, alquiler, gestión
+  locativa…) o una página concreta.
+- Backlinks sí, pero **nunca backlinks locales** ni colaboraciones locales para obtener enlaces.
 
 ## Archivos aceptados
 
