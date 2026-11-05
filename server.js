@@ -43,7 +43,7 @@ app.get(["/", "/index.html"], (req, res) => {
 app.use("/assets", express.static(path.join(__dirname, "assets")));
 app.use(express.json());
 
-function buildPrompt(fields, hasComparison = false) {
+function buildPrompt(fields, { hasComparison = false, hasKeywordFile = false } = {}) {
   const seoActive = Boolean(fields.seoPack);
   const seaActive = Boolean(fields.seaPack);
 
@@ -89,6 +89,16 @@ function buildPrompt(fields, hasComparison = false) {
       : "";
 
   const conclusionNumber = seaActive ? 10 : 9;
+
+  // Consignes ajoutées à la section 6 lorsqu'un export Search Console des requêtes est joint.
+  const keywordFileInstructions = `
+Un export des requêtes Google Search Console est joint, précédé de l'intitulé « EXPORT DES MOTS-CLÉS (SEARCH CONSOLE) ». Utilise-le comme source principale de cette section :
+- sélectionne les 5 à 8 requêtes hors marque les plus utiles (intention forte : achat, vente, estimation, location, agence immobilière + ville) ;
+- pour chacune, indique les clics, les impressions et la position moyenne ;
+- signale les requêtes qui ont beaucoup d'impressions mais une position supérieure à 10 : ce sont des opportunités de progression ;
+- ne reproduis pas la liste complète.
+Ce fichier ne couvre en général qu'une seule période : n'en déduis aucune évolution, sauf s'il contient explicitement des colonnes de comparaison entre deux périodes.
+`;
 
   // Section 5.1 : uniquement lorsqu'un second rapport (période de comparaison) est joint.
   const reportComparisonSection = `
@@ -386,6 +396,10 @@ Si des mots-clés sont disponibles, commente leur évolution.
 Sinon, écris exactement :
 "Aucune donnée exploitable sur les mots-clés n'est disponible dans le rapport."
 
+Requêtes de marque : regroupe toutes les requêtes qui contiennent le nom de l'agence (${clientName}) ou une de ses variantes (abréviation, faute de frappe, nom suivi d'une ville, nom d'une personne de l'agence) et commente-les une seule fois, en une phrase au maximum. Ne les analyse jamais une par une.
+Concentre l'analyse sur les requêtes hors marque (métier, type de bien ou de service, ville), plus utiles pour mesurer la visibilité auprès de nouveaux clients.
+Regroupe aussi les requêtes presque identiques (pluriel, accents, tiret) au lieu de les commenter séparément.
+${hasKeywordFile ? keywordFileInstructions : ""}
 Ajoute ensuite un bloc :
 ➤ Lecture :
 avec une interprétation sobre et utile, même si les données sont absentes.
@@ -428,6 +442,11 @@ IMPORTANT :
 - Ne jamais écrire "vous devriez", "il est recommandé de", "nous vous recommandons de" ou équivalent
 - Ne jamais donner l'impression que le client doit faire ces actions
 - Le ton doit être proactif, professionnel et orienté accompagnement
+
+PÉRIMÈTRE DE NOTRE ÉQUIPE :
+- Notre équipe n'intervient pas sur les annonces ni sur les fiches des biens immobiliers : c'est le client qui les gère. Ne propose jamais d'action sur les annonces, les fiches de biens ou leurs descriptions.
+- Tu peux en revanche proposer d'optimiser les pages de services du site (estimation, vente, achat, location, gestion locative, etc.) ou une page précise lorsque les constats le justifient.
+- Les actions de netlinking (backlinks) sont possibles, mais ne propose jamais de backlinks locaux ni de partenariats locaux pour obtenir des liens.
 ${seaActive ? seaSection : ""}
 ${conclusionNumber}. Conclusion
 Titre cette section exactement :
@@ -564,7 +583,8 @@ function buildFilePart(file) {
 function handleUpload(req, res, next) {
   upload.fields([
     { name: "mainReport", maxCount: 5 },
-    { name: "comparisonReport", maxCount: 5 }
+    { name: "comparisonReport", maxCount: 5 },
+    { name: "keywordReport", maxCount: 1 }
   ])(req, res, (error) => {
     if (!error) {
       return next();
@@ -574,8 +594,13 @@ function handleUpload(req, res, next) {
 
     if (error.code === "LIMIT_FILE_SIZE") {
       message = "Un des fichiers dépasse la taille maximale autorisée (20 Mo).";
-    } else if (error.code === "LIMIT_FILE_COUNT" || error.code === "LIMIT_UNEXPECTED_FILE") {
-      message = "Vous pouvez joindre au maximum 5 fichiers par période.";
+    } else if (error.code === "LIMIT_UNEXPECTED_FILE" && error.field === "keywordReport") {
+      message = "Tu ne peux joindre qu'un seul export des mots-clés.";
+    } else if (error.code === "LIMIT_UNEXPECTED_FILE" && ["mainReport", "comparisonReport"].includes(error.field)) {
+      message = "Tu peux joindre au maximum 5 fichiers par période.";
+    } else if (error.code === "LIMIT_UNEXPECTED_FILE") {
+      // Champ inconnu du serveur : en général une page plus récente que le serveur qui tourne.
+      message = "Le serveur ne reconnaît pas un des fichiers envoyés. Recharge la page puis réessaie.";
     }
 
     return res.status(400).json({ error: message });
@@ -591,6 +616,7 @@ app.post("/api/generate-summary", handleUpload, async (req, res) => {
 
     const mainFiles = req.files?.mainReport || [];
     const comparisonFiles = req.files?.comparisonReport || [];
+    const keywordFiles = req.files?.keywordReport || [];
     const hasComparison = comparisonFiles.length > 0;
 
     if (!mainFiles.length) {
@@ -599,6 +625,10 @@ app.post("/api/generate-summary", handleUpload, async (req, res) => {
 
     const unsupportedFiles = [...mainFiles, ...comparisonFiles].filter((file) => !getFileKind(file));
 
+    if (keywordFiles.some((file) => path.extname(file.originalname || "").toLowerCase() !== ".csv")) {
+      return res.status(400).json({ error: "L'export des mots-clés doit être un fichier CSV." });
+    }
+
     if (unsupportedFiles.length) {
       const names = unsupportedFiles.map((file) => file.originalname).join(", ");
       return res.status(400).json({
@@ -606,7 +636,7 @@ app.post("/api/generate-summary", handleUpload, async (req, res) => {
       });
     }
 
-    const prompt = buildPrompt(req.body, hasComparison);
+    const prompt = buildPrompt(req.body, { hasComparison, hasKeywordFile: keywordFiles.length > 0 });
     // Avec une comparaison, chaque groupe de documents est précédé de son intitulé.
     const fileParts = hasComparison
       ? [
@@ -616,10 +646,13 @@ app.post("/api/generate-summary", handleUpload, async (req, res) => {
           ...comparisonFiles.map(buildFilePart)
         ]
       : mainFiles.map(buildFilePart);
+    const keywordParts = keywordFiles.map((file) => ({
+      text: `EXPORT DES MOTS-CLÉS (SEARCH CONSOLE) – fichier « ${file.originalname} » :\n${file.buffer.toString("utf8")}`
+    }));
     const contents = [
       {
         role: "user",
-        parts: [{ text: prompt }, ...fileParts]
+        parts: [{ text: prompt }, ...fileParts, ...keywordParts]
       }
     ];
 
